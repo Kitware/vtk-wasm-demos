@@ -1,0 +1,5 @@
+node_modules/
+static/
+Cones/out
+Cones/node_modules/
+ConesJS/node_modules/
