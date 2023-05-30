@@ -98,6 +98,13 @@ function animate() {
   animationRequestId = requestAnimationFrame(animate)
 }
 
+function updateMapperStatic() {
+  let actors = renderer.getActors();
+  for (let i = 0; i < actors.length; ++i) {
+    actors[i].getMapper().setStatic(options.mapperIsStatic);
+  }
+}
+
 // ----------------------------------------------------------------------------
 function updateAnimateState() {
   if (options.animate) {    
@@ -142,7 +149,7 @@ gui.add(options, 'dz', 1.0, 5.0).step(1).onChange(() => {
   updateDatasets();
 });
 gui.add(options, 'mapperIsStatic').onChange(() => {
-  // TODO: takes too long to loop over each actor's mapper.
+  updateMapperStatic();
 });
 gui.add(options, 'animate').onChange(() => {
   updateAnimateState();
@@ -158,6 +165,7 @@ gui.add(
 
 // Create the cones with default options and render.
 updateDatasets();
+updateMapperStatic();
 updateAnimateState();
 
 // -----------------------------------------------------------
