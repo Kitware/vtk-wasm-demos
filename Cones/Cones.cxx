@@ -113,6 +113,13 @@ void Cones::Initialize() {
   // create the default renderer
   this->Window->AddRenderer(this->Renderer);
   this->Window->SetInteractor(this->Interactor);
+  // set the current style to TrackBallCamera. Default is joystick
+  if (auto iStyle = vtkInteractorStyle::SafeDownCast(
+          this->Interactor->GetInteractorStyle())) {
+    if (auto switchStyle = vtkInteractorStyleSwitch::SafeDownCast(iStyle)) {
+      switchStyle->SetCurrentStyleToTrackballCamera();
+    }
+  }
 }
 
 //------------------------------------------------------------------------------
