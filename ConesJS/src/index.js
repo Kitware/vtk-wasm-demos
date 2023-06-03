@@ -24,7 +24,7 @@ var options = {
   animate: true,
 };
 
-var animationRequestId = null;
+var animationEventListener = null;
 
 // ----------------------------------------------------------------------------
 function updateDatasets() {
@@ -91,13 +91,6 @@ function updateDatasets() {
 }
 
 // ----------------------------------------------------------------------------
-function animate() {
-  renderer.getActiveCamera().azimuth(1);
-  renderer.resetCameraClippingRange();
-  renderWindow.render();
-  animationRequestId = requestAnimationFrame(animate)
-}
-
 function updateMapperStatic() {
   let actors = renderer.getActors();
   for (let i = 0; i < actors.length; ++i) {
@@ -106,13 +99,21 @@ function updateMapperStatic() {
 }
 
 // ----------------------------------------------------------------------------
+function spinCamera() {
+  renderer.getActiveCamera().azimuth(1);
+  renderer.resetCameraClippingRange();
+}
+
+// ----------------------------------------------------------------------------
 function updateAnimateState() {
-  if (options.animate) {    
-    animationRequestId = requestAnimationFrame(animate)
+  let renderWindowInteractor = renderWindow.getInteractor();
+  if (options.animate) {
+    const subscription = renderWindowInteractor.onAnimation(spinCamera);
+    animationEventListener = { subscription, renderWindowInteractor };
+    renderWindowInteractor.requestAnimation(animationEventListener);
   }
   else {
-    console.log("cancel " + animationRequestId )
-    cancelAnimationFrame(animationRequestId)
+    renderWindowInteractor.cancelAnimation(animationEventListener);
   }
 }
 
