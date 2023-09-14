@@ -1,29 +1,31 @@
 {
-    "name": "vtkwasmbenchmarks",
-    "version": "1.0.0",
-    "description": "A collection of VTK web-based benchmark applications",
-    "main": "index.js",
-    "categories": [
-        "Visualization"
-    ],
-    "scripts": {
-        "build": "concurrently \"npm run build:cones\" \"npm run build:conesjs\" \"webpack --progress --mode=production\"",
-        "build:cones": "cd Cones &&npm install && npm run build-wasm && npm run build",
-        "build:conesjs": "cd ConesJS && npm install && npm run build",
-        "start": "webpack serve --progress --mode=production --static=./static",
-        "dev": "webpack serve --progress --mode=development --static=./static"
-    },
-    "author": "",
-    "license": "Apache 2.0",
-    "devDependencies": {
-        "concurrently": "^8.0.1",
-        "copy-webpack-plugin": "^11.0.0",
-        "css-loader": "^6.7.3",
-        "html-webpack-plugin": "^5.5.0",
-        "postcss-loader": "^7.0.2",
-        "style-loader": "^3.3.1",
-        "webpack": "^5.75.0",
-        "webpack-cli": "^5.0.1",
-        "webpack-dev-server": "^4.11.1"
-    }
+  "name": "vtkwasmbenchmarks",
+  "version": "1.0.0",
+  "description": "A collection of VTK web-based benchmark applications",
+  "main": "index.js",
+  "categories": [
+    "Visualization"
+  ],
+  "scripts": {
+    "build": "concurrently \"npm run build:cones\" \"npm run build:conesjs\" \"npm run build:geometryviewer\" \"webpack --progress --mode=production\"",
+    "build:cones": "cd Cones && npm install && npm run build-wasm && npm run build",
+    "build:conesjs": "cd ConesJS && npm install && npm run build",
+    "build:geometryviewer": "cd GeometryViewer && npm install && npm run build-wasm && npm run build",
+    "build:geometryviewer-with-developer-vtk": "cd GeometryViewer && npm install && npm run build-wasm-with-developer-vtk && npm run build",
+    "start": "webpack serve --progress --mode=production --static=./static",
+    "dev": "webpack serve --progress --mode=development --static=./static"
+  },
+  "author": "",
+  "license": "Apache 2.0",
+  "devDependencies": {
+    "concurrently": "^8.0.1",
+    "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^6.7.3",
+    "html-webpack-plugin": "^5.5.0",
+    "postcss-loader": "^7.0.2",
+    "style-loader": "^3.3.1",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
+    "webpack-dev-server": "^4.11.1"
+  }
 }

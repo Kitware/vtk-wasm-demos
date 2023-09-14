@@ -4,3 +4,6 @@ Cones/out
 Cones/src/ConesViewer.js
 Cones/node_modules/
 ConesJS/node_modules/
+GeometryViewer/out
+GeometryViewer/src/GeometryViewer.js
+GeometryViewer/node_modules

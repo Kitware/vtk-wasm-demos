@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset='utf-8' />
+  <title>
+    <%= htmlWebpackPlugin.options.title %>
+  </title>
+  <!-- <meta name="viewport" content="width=device-width,initial-scale=1" /> -->
+  <meta name="description" content="<%= htmlWebpackPlugin.options.metaDesc %>" />
+  <link rel="icon" type="image/x-icon" href="vtkLogo.ico">
+  <link href='https://fonts.googleapis.com/css?family=Exo 2' rel='stylesheet'>
+</head>
+
+<body>
+  <label for="vtk-input" class="drop-container" id="dropcontainer">
+    <span class="drop-title">Drop *.obj, *.ply, *.stl, *.vtp, *.vtu files here</span>
+    or
+    <input type="file" id="vtk-input" accept=".obj, .ply, .stl, .vtp, .vtu" required>
+    or
+    <span class="drop-title">Enter URL</span>
+    <input type="url" id="vtk-url" placeholder="https://data.kitware.com/...">
+  </label>
+  <canvas id="canvas" class="viewer"></canvas>
+  <script type='text/javascript' src='./index.js'></script>
+</body>
+
+</html>

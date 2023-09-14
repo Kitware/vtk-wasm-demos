@@ -1,15 +1,16 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+
 // creates a static folder in project root directory.
-const outputPath = path.resolve(__dirname, "static");
-const imagesDir = path.resolve(__dirname, "images");
+const outputPath = path.resolve(path.dirname(__dirname), "static", "geometryviewer");
+const imagesDir = path.resolve(path.dirname(__dirname), "images");
 
 module.exports = {
-  entry: { index: path.join(__dirname, "web", "index.js") },
+  entry: path.resolve(__dirname, "src", "index.js"),
   output: {
     clean: true,
     path: outputPath,
-    filename: "index.js",
+    filename: "index.js"
   },
   module: {
     rules: [
@@ -29,21 +30,21 @@ module.exports = {
     ],
   },
   plugins: [
-    // Copies html
+    // Links html with webgl and webgpu entry points.
     new HtmlWebpackPlugin({
       hash: true,
-      title: 'VTK Web Benchmarks',
-      header: 'VTKWebBenchmarks',
-      metaDesc: 'A collection of VTK web benchmark applications',
+      title: 'Geometry Viewer',
+      header: 'GeometryViewer',
+      metaDesc: 'A VTK web application to view geometry files.',
       favicon: path.resolve(imagesDir, "vtkLogo.ico"),
-      template: path.resolve(__dirname, "web", "index.html"),
+      template: path.resolve(__dirname, "src", "index.html"),
       filename: 'index.html',
-      chunks: ['index'],
+      chunks: ["index"],
       inject: 'body',
     }),
   ],
   performance: {
-    maxAssetSize: 13000000,
-    maxEntrypointSize: 13000000,
+    maxAssetSize: 15000000,
+    maxEntrypointSize: 15000000,
   },
 }
