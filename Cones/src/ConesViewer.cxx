@@ -1,4 +1,4 @@
-#include "Cones.h"
+#include "ConesViewer.h"
 
 #include <vtkActor.h>
 #include <vtkCallbackCommand.h>
@@ -18,21 +18,22 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 #include <vtkRendererCollection.h>
+#include <vtkSDL2RenderWindowInteractor.h>
 
 #include <iostream>
 
 //------------------------------------------------------------------------------
-Cones::Cones() {
+ConesViewer::ConesViewer() {
   std::cout << __func__ << std::endl;
   this->Window->SetWindowName(__func__);
 }
 
 //------------------------------------------------------------------------------
-Cones::~Cones() { std::cout << __func__ << std::endl; }
+ConesViewer::~ConesViewer() { std::cout << __func__ << std::endl; }
 
 //------------------------------------------------------------------------------
-int Cones::CreateDatasets(int nx, int ny, int nz, double dx, double dy,
-                          double dz) {
+int ConesViewer::CreateDatasets(int nx, int ny, int nz, double dx, double dy,
+                                double dz) {
   std::cout << __func__ << '(' << nx << ',' << ny << ',' << nz << ',' << dx
             << ',' << dy << ',' << dz << ')' << std::endl;
 
@@ -91,7 +92,7 @@ int Cones::CreateDatasets(int nx, int ny, int nz, double dx, double dy,
 }
 
 //------------------------------------------------------------------------------
-void Cones::SetMapperStatic(bool value) {
+void ConesViewer::SetMapperStatic(bool value) {
   std::cout << __func__ << '(' << value << ')' << std::endl;
   for (const auto &viewProp : vtk::Range(this->Renderer->GetViewProps())) {
     if (auto actor = static_cast<vtkActor *>(viewProp)) {
@@ -101,14 +102,14 @@ void Cones::SetMapperStatic(bool value) {
 }
 
 //------------------------------------------------------------------------------
-void Cones::Azimuth(double value) {
+void ConesViewer::Azimuth(double value) {
   std::cout << __func__ << '(' << value << ')' << std::endl;
   this->Renderer->GetActiveCamera()->Azimuth(value);
   this->Renderer->ResetCameraClippingRange();
 }
 
 //------------------------------------------------------------------------------
-void Cones::Initialize() {
+void ConesViewer::Initialize() {
   std::cout << __func__ << std::endl;
   // create the default renderer
   this->Window->AddRenderer(this->Renderer);
@@ -123,13 +124,13 @@ void Cones::Initialize() {
 }
 
 //------------------------------------------------------------------------------
-void Cones::Render() {
+void ConesViewer::Render() {
   std::cout << __func__ << std::endl;
   this->Window->Render();
 }
 
 //------------------------------------------------------------------------------
-void Cones::ResetView() {
+void ConesViewer::ResetView() {
   std::cout << __func__ << std::endl;
   auto ren = this->Window->GetRenderers()->GetFirstRenderer();
   if (ren != nullptr) {
@@ -138,7 +139,7 @@ void Cones::ResetView() {
 }
 
 //------------------------------------------------------------------------------
-int Cones::Run() {
+int ConesViewer::Run() {
   std::cout << __func__ << std::endl;
 
   this->Interactor->UpdateSize(300, 300);
@@ -149,12 +150,13 @@ int Cones::Run() {
   this->Renderer->SetBackground(0.2, 0.3, 0.4);
   this->Renderer->ResetCamera();
   this->Window->Render();
-  this->Interactor->Start();
+  vtkSDL2RenderWindowInteractor::SafeDownCast(this->Interactor)
+      ->AddEventHandler();
   return 0;
 }
 
 //------------------------------------------------------------------------------
-void Cones::SetScrollSensitivity(float sensitivity) {
+void ConesViewer::SetScrollSensitivity(float sensitivity) {
   std::cout << __func__ << "(" << sensitivity << ")" << std::endl;
   if (auto iStyle = vtkInteractorStyle::SafeDownCast(
           this->Interactor->GetInteractorStyle())) {
@@ -168,7 +170,7 @@ void Cones::SetScrollSensitivity(float sensitivity) {
 }
 
 //------------------------------------------------------------------------------
-CameraState Cones::GetCameraState() {
+CameraState ConesViewer::GetCameraState() {
   auto cam = this->Renderer->GetActiveCamera();
   CameraState camState;
   cam->GetViewUp(camState.viewUp);
@@ -179,7 +181,7 @@ CameraState Cones::GetCameraState() {
 }
 
 //------------------------------------------------------------------------------
-void Cones::SetCameraState(CameraState &state) {
+void ConesViewer::SetCameraState(CameraState &state) {
   auto cam = this->Renderer->GetActiveCamera();
   cam->SetViewUp(state.viewUp);
   cam->SetPosition(state.position);

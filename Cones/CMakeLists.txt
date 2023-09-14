@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(Cones)
+project(ConesViewer)
 
 # -----------------------------------------------------------------------------
 # EMSCRIPTEN only
@@ -32,12 +32,12 @@ endif ()
 # Compile example code
 # -----------------------------------------------------------------------------
 
-add_executable(Cones
-  Cones.h
-  Cones.cxx
+add_executable(ConesViewer
+  src/ConesViewer.h
+  src/ConesViewer.cxx
 )
 
-target_link_libraries(Cones
+target_link_libraries(ConesViewer
   PRIVATE
     VTK::FiltersSources
     VTK::InteractionStyle
@@ -53,11 +53,14 @@ set(emscripten_link_options)
 set(emscripten_compile_options)
 
 list(APPEND emscripten_link_options
-  "-sWASM=1"
-  "-sMODULARIZE=1"
-  "-sALLOW_MEMORY_GROWTH=1"
-  "-sEXPORT_NAME=instantiateWasmModule"
   "-lembind"
+  "-sMODULARIZE=1"
+  "-sEXPORT_ES6=1"
+  "-sENVIRONMENT=web"
+  "-sALLOW_MEMORY_GROWTH=1"
+  "-sSINGLE_FILE=1"
+  # "-sWASM_BIGINT=1"
+  # "-sMAXIMUM_MEMORY=4GB"
   "-sEXPORTED_RUNTIME_METHODS=['ENV']" # ENV holds the environment variables accessible by C getenv
 )
 
@@ -148,14 +151,14 @@ elseif(OPTIMIZE STREQUAL "SMALLEST_WITH_CLOSURE")
   )
 endif()
 
-target_compile_options(Cones
+target_compile_options(ConesViewer
   PUBLIC
     ${emscripten_compile_options}
     ${emscripten_optimizations}
     ${emscripten_debug_options}
 )
 
-target_link_options(Cones
+target_link_options(ConesViewer
   PUBLIC
     ${emscripten_link_options}
     ${emscripten_optimizations}
@@ -167,6 +170,11 @@ target_link_options(Cones
 # -----------------------------------------------------------------------------
 
 vtk_module_autoinit(
-  TARGETS  Cones
+  TARGETS  ConesViewer
   MODULES  ${VTK_LIBRARIES}
+)
+
+set_target_properties(ConesViewer
+PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/src
 )

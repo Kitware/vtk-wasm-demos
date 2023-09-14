@@ -1,36 +1,35 @@
 {
-    "name": "cones",
-    "version": "1.0.0",
-    "description": "Benchmarks VTK rendering with webassembly.",
-    "scripts": {
-        "build-wasm": "npm run build-wasm:release",
-        "build-wasm:release": "npx itk-wasm -i kitware/vtk-wasm -b out -s . build -- Release -DDEBUGINFO=PROFILE",
-        "build-wasm:debug": "npx itk-wasm -i kitware/vtk-wasm -b out -s . build -- Debug -DDEBUGINFO=DEBUG_NATIVE -DOPTIMIZE=NO_OPTIMIZATION",
-        "build": "webpack --progress --mode=production ",
-        "build:debug": "webpack --progress --mode=development",
-        "start": "webpack serve --progress --mode=production --static=../static",
-        "dev": "webpack serve --progress --mode=development --static=../static"
-    },
-    "author": "Jaswant Panchumarti",
-    "keywords": [
-        "vtk",
-        "wasm",
-        "emscripten",
-        "opengl",
-        "webgpu"
-    ],
-    "license": "Apache 2.0",
-    "devDependencies": {
-      "copy-webpack-plugin": "^11.0.0",
-      "css-loader": "^6.7.3",
-      "dat.gui": "^0.7.9",
-      "html-webpack-plugin": "^5.5.0",
-      "itk-wasm": "^1.0.0-b.83",
-      "postcss-loader": "^7.0.2",
-      "style-loader": "^3.3.1",
-      "webpack": "^5.75.0",
-      "webpack-cli": "^5.0.1",
-      "webpack-dev-server": "^4.11.1"
-    }
+  "name": "cones",
+  "version": "1.0.0",
+  "description": "Benchmarks VTK rendering with webassembly.",
+  "scripts": {
+    "build-wasm": "npm run build-wasm:release",
+    "build-wasm:release": "npx itk-wasm -i kitware/vtk-wasm -b out -s . build -- Release -DDEBUGINFO=PROFILE",
+    "build-wasm:debug": "npx itk-wasm -i kitware/vtk-wasm -b out -s . build -- Debug -DDEBUGINFO=DEBUG_NATIVE -DOPTIMIZE=NO_OPTIMIZATION",
+    "build": "npm run build:release",
+    "build:release": "webpack --progress --mode=production",
+    "build:debug": "webpack --progress --mode=development",
+    "start": "webpack serve --progress --mode=production --static=../static",
+    "dev": "webpack serve --progress --mode=development --static=../static"
+  },
+  "author": "Jaswant Panchumarti",
+  "keywords": [
+    "vtk",
+    "wasm",
+    "emscripten",
+    "opengl",
+    "webgpu"
+  ],
+  "license": "Apache 2.0",
+  "devDependencies": {
+    "css-loader": "^6.7.3",
+    "dat.gui": "^0.7.9",
+    "html-webpack-plugin": "^5.5.0",
+    "itk-wasm": "^1.0.0-b.83",
+    "postcss-loader": "^7.0.2",
+    "style-loader": "^3.3.1",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
+    "webpack-dev-server": "^4.11.1"
   }
-  
+}

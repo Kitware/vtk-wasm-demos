@@ -11,10 +11,10 @@ public:
   double viewAngle;
 };
 
-class Cones {
+class ConesViewer {
 public:
-  Cones();
-  ~Cones();
+  ConesViewer();
+  ~ConesViewer();
 
   int CreateDatasets(int nx, int ny, int nz, double dx, double dy, double dz);
   void SetMapperStatic(bool value);
@@ -37,19 +37,19 @@ private:
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/bind.h>
-EMSCRIPTEN_BINDINGS(ConesJSBindings) {
-  emscripten::class_<Cones>("Cones")
+EMSCRIPTEN_BINDINGS(ConesViewerJSBindings) {
+  emscripten::class_<ConesViewer>("ConesViewer")
       .constructor<>()
-      .function("initialize", &Cones::Initialize)
-      .function("createDatasets", &Cones::CreateDatasets)
-      .function("setMapperStatic", &Cones::SetMapperStatic)
-      .function("azimuth", &Cones::Azimuth)
-      .function("setScrollSensitivity", &Cones::SetScrollSensitivity)
-      .function("render", &Cones::Render)
-      .function("resetView", &Cones::ResetView)
-      .function("run", &Cones::Run)
-      .function("getCameraState", &Cones::GetCameraState)
-      .function("setCameraState", &Cones::SetCameraState);
+      .function("initialize", &ConesViewer::Initialize)
+      .function("createDatasets", &ConesViewer::CreateDatasets)
+      .function("setMapperStatic", &ConesViewer::SetMapperStatic)
+      .function("azimuth", &ConesViewer::Azimuth)
+      .function("setScrollSensitivity", &ConesViewer::SetScrollSensitivity)
+      .function("render", &ConesViewer::Render)
+      .function("resetView", &ConesViewer::ResetView)
+      .function("run", &ConesViewer::Run)
+      .function("getCameraState", &ConesViewer::GetCameraState)
+      .function("setCameraState", &ConesViewer::SetCameraState);
   emscripten::value_object<CameraState>("CameraState")
       .field("viewUp", &CameraState::viewUp)
       .field("position", &CameraState::position)

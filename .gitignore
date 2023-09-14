@@ -1,5 +1,6 @@
 node_modules/
 static/
 Cones/out
+Cones/src/ConesViewer.js
 Cones/node_modules/
 ConesJS/node_modules/
