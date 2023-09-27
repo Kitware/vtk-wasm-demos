@@ -11,6 +11,8 @@ public:
   ~GeometryViewer();
 
   void LoadDataFile(const std::string &filename);
+  void LoadDataFileFromMemory(const std::string &filename,
+                              std::uintptr_t buffer, std::size_t nbytes);
 
   void Initialize();
   void Render();
@@ -20,6 +22,7 @@ public:
   void Azimuth(double value);
   void SetScrollSensitivity(float sensitivity);
   void SetEdgeVisibility(bool visible);
+  void SetLineWidth(double value);
 
 private:
   float ScrollSensitivity = 1.0;
@@ -35,12 +38,15 @@ EMSCRIPTEN_BINDINGS(GeometryViewerJSBindings) {
   emscripten::class_<GeometryViewer>("GeometryViewer")
       .constructor<>()
       .function("loadDataFile", &GeometryViewer::LoadDataFile)
+      .function("loadDataFileFromMemory",
+                &GeometryViewer::LoadDataFileFromMemory)
       .function("initialize", &GeometryViewer::Initialize)
       .function("render", &GeometryViewer::Render)
       .function("resetView", &GeometryViewer::ResetView)
       .function("run", &GeometryViewer::Run)
       .function("azimuth", &GeometryViewer::Azimuth)
       .function("setScrollSensitivity", &GeometryViewer::SetScrollSensitivity)
-      .function("setEdgeVisibility", &GeometryViewer::SetEdgeVisibility);
+      .function("setEdgeVisibility", &GeometryViewer::SetEdgeVisibility)
+      .function("setLineWidth", &GeometryViewer::SetLineWidth);
 }
 #endif

@@ -1,13 +1,19 @@
-import { download, upload } from './FileTransfer';
+import { chunkify, download } from './FileTransfer';
 import { VTKWebGL2Options, VTKWebGPUOptions } from './WasmOptions';
+import { maxSize } from './ArrayBufferLimits';
 import Module from './GeometryViewer';
 import initializeWebGPUDevice from './WebGPUSupport'
 import * as dat from 'dat.gui';
 import './style.css';
 
+var MAX_INT53 = 9007199254740992;
+var MIN_INT53 = -9007199254740992;
+var bigintToI53Checked = num => (num < MIN_INT53 || num > MAX_INT53) ? NaN : Number(num);
+
 // Default parameters
 var parameters = {
   edgeVisibility: false,
+  lineWidth: 1.0,
   scrollSensitivty: 0.15,
   animate: false,
 };
@@ -58,6 +64,12 @@ function setupUI() {
       viewer?.render();
     }
   });
+  gui.add(parameters, 'lineWidth').onChange(() => {
+    viewer?.setLineWidth(parameters.lineWidth);
+    if (!parameters.animate) {
+      viewer?.render();
+    }
+  });
   gui.add(parameters, 'scrollSensitivty', 0.0, 1.0).onChange(() => {
     viewer?.setScrollSensitivity(parameters.scrollSensitivty);
   });
@@ -75,7 +87,7 @@ function setupUI() {
 
 }
 
-function start(instance, filenames) {
+async function start(instance, blobs) {
   // hide the file chooser
   const dropContainer = document.getElementById("dropcontainer");
   dropContainer.style.display = 'none';
@@ -87,8 +99,20 @@ function start(instance, filenames) {
   console.debug("WASM runtime initialized");
   // Initialize application
   viewer = new instance.GeometryViewer();
-  for (let i = 0; i < filenames.length; ++i) {
-    viewer.loadDataFile(filenames[i]);
+  for (let i = 0; i < blobs.length; ++i) {
+    let blob = blobs[i];
+    let name = blobs[i].name;
+    let chunks = chunkify(blob, /*chunkSize=*/bigintToI53Checked(maxSize))
+    let offset = 0;
+    let ptr = instance._malloc(blob.size);
+    for (let i = 0; i < chunks.length; ++i) {
+      let chunk = chunks[i];
+      let data = new Uint8Array(await chunk.arrayBuffer());
+      instance.HEAPU8.set(data, ptr + offset);
+      offset += data.byteLength;
+    }
+    viewer.loadDataFileFromMemory(name, ptr, blob.size);
+    instance._free(ptr);
   }
   viewer.initialize();
   viewer.resetView();
@@ -129,14 +153,7 @@ vtkInput.onchange = async () => {
   setupUI();
   let configuration = await configure();
   let instance = await Module(configuration);
-  let filenames = [];
-  for (let i = 0; i < vtkInput.files.length; ++i) {
-    let blob = vtkInput.files[i];
-    let name = vtkInput.files[i].name;
-    await upload(instance.FS, blob, name);
-    filenames.push(name);
-  }
-  start(instance, filenames);
+  await start(instance, vtkInput.files);
 }
 
 /// A URL input also starts the GeometryViewer
@@ -154,9 +171,8 @@ vtkUrl.oninput = async () => {
     setupUI();
     let configuration = await configure();
     let instance = await Module(configuration);
-    // upload the file to WebAssembly virtual file system
-    await upload(instance.FS, blob, filename);
-    start(instance, [filename]);
+    blob.name = filename;
+    await start(instance, [blob]);
   } catch (error) {
     alert(`An error occurred with ${vtkUrl.value}. Please enter the URL to a supported mesh file. ${error}`);
     return;

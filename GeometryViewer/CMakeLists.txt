@@ -61,11 +61,16 @@ list(APPEND emscripten_link_options
   "-sEXPORT_ES6=1"
   "-sENVIRONMENT=web"
   "-sALLOW_MEMORY_GROWTH=1"
+  "-sMAXIMUM_MEMORY=4GB"
   "-sSINGLE_FILE=1"
-  # "-sWASM_BIGINT=1"
-  # "-sMAXIMUM_MEMORY=4GB"
-  "-sEXPORTED_RUNTIME_METHODS=['FS', 'ENV']" # ENV holds the environment variables accessible by C getenv
+  "-sEXPORTED_FUNCTIONS=['_malloc', '_free']"
+  "-sEXPORTED_RUNTIME_METHODS=['ENV']"
 )
+if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+  list(APPEND emscripten_link_options
+  "-sWASM_BIGINT=1"
+  "-sMAXIMUM_MEMORY=16GB")
+endif ()
 
 set(emscripten_debug_options)
 set(DEBUGINFO "PROFILE" CACHE STRING "Type of debug info")

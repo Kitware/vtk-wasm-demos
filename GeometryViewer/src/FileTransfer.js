@@ -1,11 +1,16 @@
-import Module from './GeometryViewer';
-
-export async function upload(wasmFS, blob, name) {
-  let buffer = await blob.arrayBuffer();
-  wasmFS.writeFile(name, new Uint8Array(buffer));
-  console.log("Loaded file:", name);
+// Break a blob into individual blobs of `chunkSize` number of bytes.
+export function chunkify(blob, chunkSize) {
+  let numChunks = Math.ceil(blob.size / chunkSize);
+  let i = 0;
+  let chunks = [];
+  while (i < numChunks) {
+    let offset = (i++) * chunkSize;
+    chunks.push(blob.slice(offset, offset + chunkSize));
+  }
+  return chunks;
 }
 
+// Download a url. Probes content-disposition header for a filename.
 export async function download(url) {
   let response = await fetch(url);
   const disposition = response.headers.get('content-disposition');
