@@ -1,21 +1,63 @@
-[![Deploy Benchmarks](https://github.com/Kitware/vtkWasmBenchmarks/actions/workflows/build.yml/badge.svg)](https://github.com/Kitware/vtkWasmBenchmarks/actions/workflows/build.yml)
+# base
 
-Visit [kitware.github.io/vtkWasmBenchmarks/](https://kitware.github.io/vtkWasmBenchmarks/) to run these applications in your browser.
+## Project setup
 
-# Build
-
-If you want to develop, clone the repository.
-```sh
-git clone https://github.com/Kitware/vtkWasmBenchmarks.git
 ```
+# yarn
+yarn
 
-These commands build all applications. VTK C++ applications pull [kitware/vtk-wasm](https://hub.docker.com/r/kitware/vtk-wasm) image from DockerHub for pre-built VTK-wasm32 release binaries.
-```sh
+# npm
 npm install
-npm run build
+
+# pnpm
+pnpm install
 ```
 
-Finally, serve the static site.
-```sh
-npm run start
+### Build C++
+
 ```
+npm run build-wasm
+```
+
+### Compiles and hot-reloads for development
+
+```
+# yarn
+yarn dev
+
+# npm
+npm run dev
+
+# pnpm
+pnpm dev
+```
+
+### Compiles and minifies for production
+
+```
+# yarn
+yarn build
+
+# npm
+npm run build
+
+# pnpm
+pnpm build
+```
+
+### Lints and fixes files
+
+```
+# yarn
+yarn lint
+
+# npm
+npm run lint
+
+# pnpm
+pnpm lint
+```
+
+### Customize configuration
+
+See [Configuration Reference](https://vitejs.dev/config/).
