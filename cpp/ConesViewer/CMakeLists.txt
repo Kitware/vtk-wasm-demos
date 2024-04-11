@@ -39,11 +39,7 @@ add_executable(ConesViewer
 
 target_link_libraries(ConesViewer
   PRIVATE
-    VTK::FiltersSources
-    VTK::InteractionStyle
-    VTK::RenderingOpenGL2
-    VTK::RenderingWebGPU
-    VTK::RenderingUI
+    ${VTK_LIBRARIES}
 )
 
 # -----------------------------------------------------------------------------
