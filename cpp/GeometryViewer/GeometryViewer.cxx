@@ -490,6 +490,14 @@ void GeometryViewer::SetRepresentation(int rep) {
   std::cout << __func__ << '(' << rep << ')' << std::endl;
   if (rep <= VTK_SURFACE) {
     this->P->Actor->GetProperty()->SetRepresentation(rep);
+    if (rep != VTK_SURFACE)
+    {
+      this->P->Actor->GetProperty()->SetAmbient(1.0);
+    }
+    else
+    {
+      this->P->Actor->GetProperty()->SetAmbient(0.0);
+    }
     this->P->Actor->GetProperty()->SetEdgeVisibility(false);
   } else if (rep == 3) {
     this->P->Actor->GetProperty()->SetRepresentationToSurface();
