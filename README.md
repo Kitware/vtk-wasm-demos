@@ -1,63 +1,20 @@
-# base
+# Project setup
 
-## Project setup
+## Requirements
 
-```
-# yarn
-yarn
+1. docker
+2. npm
 
-# npm
-npm install
+The build process is composed of two steps. You will need to compile C++ components to generate `.wasm` files and then run some `npm` commands to bundle those into a static site. For convenience, the shell scripts provided for Windows and Unix do everything needed to build a website from a fresh clone.
 
-# pnpm
-pnpm install
-```
+## Build
 
-### Build C++
-
-```
-npm run build-wasm
+**Windows**
+```sh
+.\build.ps1
 ```
 
-### Compiles and hot-reloads for development
-
+**Unix**
+```sh
+./build.sh
 ```
-# yarn
-yarn dev
-
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-```
-
-### Compiles and minifies for production
-
-```
-# yarn
-yarn build
-
-# npm
-npm run build
-
-# pnpm
-pnpm build
-```
-
-### Lints and fixes files
-
-```
-# yarn
-yarn lint
-
-# npm
-npm run lint
-
-# pnpm
-pnpm lint
-```
-
-### Customize configuration
-
-See [Configuration Reference](https://vitejs.dev/config/).

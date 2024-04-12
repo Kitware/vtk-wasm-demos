@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build-wasm": "npm run build-wasm:release",
-    "build-wasm:release": "npx itk-wasm -i kitware/vtk-wasm-sdk -b out -s . build -- Release -DDEBUGINFO=NONE -DOPTIMIZE=BEST",
-    "build-wasm:debug": "npx itk-wasm -i kitware/vtk-wasm-sdk -b out -s . build -- Debug -DDEBUGINFO=DEBUG_NATIVE -DOPTIMIZE=NO_OPTIMIZATION",
     "build": "vue-tsc --noEmit && vite build",
     "dev": "vite --base /",
     "lint": "eslint . --fix --ignore-path .gitignore"

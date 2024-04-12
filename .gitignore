@@ -21,6 +21,9 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
+# When using my own VTK branch for testing/development,
+# I clone VTK into dev-vtk/src and build VTK inside dev-vtk/build-vtk-wasm
+dev-vtk
 
 # Wasm output
 out/
