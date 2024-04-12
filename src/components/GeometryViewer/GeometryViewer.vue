@@ -274,28 +274,23 @@ onMounted(async () => {
   viewer.render();
   // starts processing events on browser main thread.
   viewer.start();
-  // sends a resize event so that the render window fills up browser tab dimensions.
-  setTimeout(() => {
-    window.dispatchEvent(new Event('resize'));
-  }, 0);
-
   /// connect drop events
-  const dropContainer = document.getElementById('canvas') as HTMLElement;
-  dropContainer.addEventListener('dragover', (e) => {
+  const dropDestination = document.getElementById('canvas') as HTMLElement;
+  dropDestination!.addEventListener('dragover', (e: DragEvent) => {
     // prevent default to allow drop
     e.preventDefault();
   }, false);
 
-  dropContainer.addEventListener('dragenter', () => {
-    dropContainer.classList.add('drag-active');
+  dropDestination!.addEventListener('dragenter', () => {
+    dropDestination!.classList.add('drag-active');
   });
 
-  dropContainer.addEventListener('dragleave', () => {
-    dropContainer.classList.remove('drag-active');
+  dropDestination!.addEventListener('dragleave', () => {
+    dropDestination!.classList.remove('drag-active');
   });
-  dropContainer.addEventListener('drop', (e) => {
+  dropDestination!.addEventListener('drop', (e: DragEvent) => {
     e.preventDefault();
-    dropContainer.classList.remove('drag-active');
+    dropDestination!.classList.remove('drag-active');
     const dataTransfer = e.dataTransfer as DataTransfer;
     loadFile(dataTransfer.files[0]);
   });
@@ -340,11 +335,16 @@ onUnmounted(async () => {
     <p>Your browser did not provide a GPU adapter. Known to happen on Linux!</p>
   </div>
   <input type='file' id='vtk-input' v-on:change="onFilesChanged" accept='.obj, .ply, .vtk, .vtp, .vtu' required>
-  <canvas v-if="(supportsWebGPU && viewApi == 'webgpu') || viewApi == 'webgl'"
-    :class="'GeometryViewer' + viewApi + 'Canvas'" id="canvas"></canvas>
-  <div class='tooltip'
-    style="-moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;-o-user-select:none;"
-    unselectable="on" onselectstart="return false;" onmousedown="return false;" oncontextmenu="event.preventDefault()">
+
+  <div style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;">
+    <div class='canvas_container'>
+      <canvas v-if="(supportsWebGPU && viewApi == 'webgpu') || viewApi == 'webgl'"
+        :class="'GeometryViewer' + viewApi + 'Canvas'" id="canvas"></canvas>
+    </div>
+    <div class='tooltip'
+      style="-moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;-o-user-select:none;"
+      unselectable="on" onselectstart="return false;" onmousedown="return false;" oncontextmenu="event.preventDefault()">
+    </div>
   </div>
 </template>
 

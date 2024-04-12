@@ -15,6 +15,7 @@ public:
   void Initialize();
   void Render();
   void ResetView();
+  void SetSize(int width, int height);
   void RemoveAllActors();
 
   // std::string SetVertexShaderSource(std::string source);
@@ -70,6 +71,7 @@ EMSCRIPTEN_BINDINGS(GeometryViewerJSBindings) {
       .function("initialize", &GeometryViewer::Initialize)
       .function("render", &GeometryViewer::Render)
       .function("resetView", &GeometryViewer::ResetView)
+      .function("setSize", &GeometryViewer::SetSize)
       .function("removeAllActors", &GeometryViewer::RemoveAllActors)
       .function("start", &GeometryViewer::Start)
       .function("halt", &GeometryViewer::Halt)

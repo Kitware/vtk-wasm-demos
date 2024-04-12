@@ -148,6 +148,13 @@ void ConesViewer::ResetView() {
 }
 
 //------------------------------------------------------------------------------
+void ConesViewer::SetSize(int width, int height)
+{
+  std::cout << __func__ << width << ',' << height << std::endl;
+  this->P->Interactor->UpdateSize(width, height);
+}
+
+//------------------------------------------------------------------------------
 int ConesViewer::Run() {
   std::cout << __func__ << std::endl;
 

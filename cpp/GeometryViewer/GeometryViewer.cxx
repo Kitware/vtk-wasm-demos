@@ -340,6 +340,13 @@ void GeometryViewer::ResetView() {
 }
 
 //------------------------------------------------------------------------------
+void GeometryViewer::SetSize(int width, int height)
+{
+  std::cout << __func__ << width << ',' << height << std::endl;
+  this->P->Interactor->UpdateSize(width, height);
+}
+
+//------------------------------------------------------------------------------
 void GeometryViewer::RemoveAllActors() {
   std::cout << __func__ << std::endl;
   auto ren = this->P->Window->GetRenderers()->GetFirstRenderer();
