@@ -3,8 +3,6 @@ name: Deploy Benchmarks
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
   # Allows manual triggers from actions tab
   workflow_dispatch:
 
