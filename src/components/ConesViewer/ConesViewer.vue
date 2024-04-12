@@ -130,10 +130,6 @@ onMounted(async () => {
   updateDatasets()
   // starts processing events on browser main thread.
   viewer.run();
-  // sends a resize event so that the render window fills up browser tab dimensions.
-  setTimeout(() => {
-    window.dispatchEvent(new Event("resize"));
-  }, 0);
   if (props.showControls) {
     setupUI();
   }
@@ -163,8 +159,12 @@ onUnmounted(async () => {
     <h3>This application cannot run because your browser does not support WebGPU!</h3>
     <p>Your browser did not provide a GPU adapter. Known to happen on Linux!</p>
   </div>
-  <canvas v-show="(supportsWebGPU && viewApi == 'webgpu') || viewApi == 'webgl'"
-    :class="'ConesViewer' + viewApi + 'Canvas'" id="canvas"></canvas>
+  <div style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;">
+    <div class='canvas_container'>
+      <canvas v-show="(supportsWebGPU && viewApi == 'webgpu') || viewApi == 'webgl'"
+        :class="'ConesViewer' + viewApi + 'Canvas'" id="canvas"></canvas>
+    </div>
+  </div>
 </template>
 
 <style scoped>

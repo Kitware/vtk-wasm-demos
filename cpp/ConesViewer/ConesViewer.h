@@ -10,6 +10,7 @@ public:
   void Initialize();
   void Render();
   void ResetView();
+  void SetSize(int width, int height);
   int Run();
 
   int CreateDatasets(int nx, int ny, int nz, double dx, double dy, double dz);
@@ -31,6 +32,7 @@ EMSCRIPTEN_BINDINGS(ConesViewerJSBindings) {
       .function("initialize", &ConesViewer::Initialize)
       .function("render", &ConesViewer::Render)
       .function("resetView", &ConesViewer::ResetView)
+      .function("setSize", &ConesViewer::SetSize)
       .function("run", &ConesViewer::Run)
       .function("createDatasets", &ConesViewer::CreateDatasets)
       .function("setMapperStatic", &ConesViewer::SetMapperStatic)
