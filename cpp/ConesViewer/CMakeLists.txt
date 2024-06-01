@@ -53,7 +53,7 @@ list(APPEND emscripten_link_options
   "-sMODULARIZE=1"
   "-sEXPORT_ES6=1"
   "-sEXPORT_NAME=createConesViewerModule"
-  "-sENVIRONMENT=web"
+  "-sENVIRONMENT=web,worker"
   "-sALLOW_MEMORY_GROWTH=1"
   "-sSINGLE_FILE=1"
   "-sMAXIMUM_MEMORY=4GB"
