@@ -8,7 +8,7 @@ import { Properties } from "./Properties";
 import { getConfiguration } from '../../utils/wasmConfigure'
 import { download } from "../../utils/fileDownload"
 import createGeometryViewerModule from './GeometryViewer'
-import { hasWebGPU, getDevice } from "@/utils/wasmWebGPUInit";
+import { hasWebGPU, getDevice } from "../../utils/wasmWebGPUInit";
 import GUI, { Controller } from 'lil-gui'
 
 let props = withDefaults(defineProps<Properties>(), {

@@ -58,7 +58,7 @@ list(APPEND emscripten_link_options
   "-sMODULARIZE=1"
   "-sEXPORT_ES6=1"
   "-sEXPORT_NAME=createGeometryViewerModule"
-  "-sENVIRONMENT=web"
+  "-sENVIRONMENT=web,worker"
   "-sALLOW_MEMORY_GROWTH=1"
   "-sMAXIMUM_MEMORY=4GB"
   "-sSINGLE_FILE=1"
@@ -72,6 +72,13 @@ if (CMAKE_SIZEOF_VOID_P EQUAL 8)
   "-sWASM_BIGINT=1"
   "-sMAXIMUM_MEMORY=16GB")
 endif ()
+
+if (ENABLE_THREADING)
+  list(APPEND emscripten_link_options
+    "SHELL:-s USE_PTHREADS=1"
+    "SHELL:-s PTHREAD_POOL_SIZE=4"
+  )
+endif()
 
 set(emscripten_debug_options)
 

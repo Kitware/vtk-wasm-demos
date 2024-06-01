@@ -22,5 +22,7 @@ set_property(CACHE OPTIMIZE PROPERTY
     SMALLEST_WITH_CLOSURE # -Oz --closure 1
 )
 
+option(ENABLE_THREADING "Enable threading" OFF)
+
 add_subdirectory("cpp/ConesViewer")
 add_subdirectory("cpp/GeometryViewer")

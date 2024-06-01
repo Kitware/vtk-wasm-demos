@@ -60,6 +60,13 @@ list(APPEND emscripten_link_options
   "-sEXPORTED_RUNTIME_METHODS=['ENV']" # ENV holds the environment variables accessible by C getenv
 )
 
+if (ENABLE_THREADING)
+  list(APPEND emscripten_link_options
+    "SHELL:-s USE_PTHREADS=1"
+    "SHELL:-s PTHREAD_POOL_SIZE=4"
+  )
+endif()
+
 set(emscripten_debug_options)
 if(DEBUGINFO STREQUAL "NONE")
   list(APPEND emscripten_debug_options

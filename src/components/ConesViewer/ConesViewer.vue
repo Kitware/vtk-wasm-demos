@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref } from "vue";
 import { Properties } from "./Properties";
-import { getConfiguration } from "@/utils/wasmConfigure"
-import { hasWebGPU, getDevice } from "@/utils/wasmWebGPUInit";
+import { getConfiguration } from "../../utils/wasmConfigure"
+import { hasWebGPU, getDevice } from "../../utils/wasmWebGPUInit";
 
 import type { ConesViewerModule, ConesViewer } from "./ConesViewerFactory";
 import createConesViewerModule from "./ConesViewer"
