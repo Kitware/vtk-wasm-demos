@@ -62,8 +62,10 @@ list(APPEND emscripten_link_options
 
 if (ENABLE_THREADING)
   list(APPEND emscripten_link_options
-    "SHELL:-s USE_PTHREADS=1"
+    #    "SHELL:-s USE_PTHREADS=1"
+    "-pthread"
     "SHELL:-s PTHREAD_POOL_SIZE=4"
+    "SHELL:-s OFFSCREENCANVAS_SUPPORT=1" # Proxy rendering to main browser thread
   )
 endif()
 
