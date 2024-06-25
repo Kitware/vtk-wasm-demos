@@ -18,6 +18,7 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 #include <vtkRendererCollection.h>
+#include <vtkWebAssemblyOpenGLRenderWindow.h>
 
 #include <iostream>
 
@@ -165,8 +166,13 @@ int ConesViewer::Run() {
   this->P->Renderer->GetActiveCamera()->Roll(10.0);
   this->P->Renderer->SetBackground(1.0, 1.0, 1.0);
   this->P->Renderer->ResetCamera();
+  std::cout << this->P->Window->GetClassName() << std::endl;
   this->P->Window->Render();
   this->P->Interactor->Start();
+  vtkWebAssemblyOpenGLRenderWindow* renderWindow = vtkWebAssemblyOpenGLRenderWindow::SafeDownCast(this->P->Window.GetPointer());
+  if (renderWindow) {
+    std::cout << renderWindow->GetCanvasId() << std::endl;
+  }
   return 0;
 }
 

@@ -11,6 +11,6 @@ sdk_dir="/home/jmh/github/VTKCMake/install/lib/cmake/vtk"
     emcmake cmake -GNinja -S. -B./out -DCMAKE_BUILD_TYPE=$sdk_config -DVTK_DIR=$sdk_dir
     cmake --build ./out
 )
-npm i --force
 
+npm i
 npm run build
