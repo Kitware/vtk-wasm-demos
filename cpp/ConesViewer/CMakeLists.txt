@@ -21,6 +21,7 @@ find_package(VTK
     FiltersSources      # VTK pipeline
     InteractionStyle    # Mouse handling
     RenderingOpenGL2    # For Rendering with OpenGL
+    RenderingWebGPU     # For Rendering with WebGPU
     RenderingUI         # For SDL2 Window
 )
 else()
@@ -29,7 +30,6 @@ find_package(VTK
     FiltersSources      # VTK pipeline
     InteractionStyle    # Mouse handling
     RenderingOpenGL2    # For Rendering with OpenGL
-    RenderingWebGPU     # For Rendering with WebGPU
     RenderingUI         # For SDL2 Window
 )
 endif()

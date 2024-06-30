@@ -23,7 +23,7 @@ set_property(CACHE OPTIMIZE PROPERTY
 )
 
 option(ENABLE_THREADING "Enable threading" OFF)
-option(ENABLE_WEBGPU "Enable WebGPU" ON)
+option(ENABLE_WEBGPU "Enable WebGPU" OFF)
 
 add_subdirectory("cpp/ConesViewer")
 add_subdirectory("cpp/GeometryViewer")

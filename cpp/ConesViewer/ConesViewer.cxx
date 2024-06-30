@@ -18,7 +18,9 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 #include <vtkRendererCollection.h>
+#if 1 //VTK_VERSION_NUMBER >= 9303023080ULL
 #include <vtkWebAssemblyOpenGLRenderWindow.h>
+#endif
 
 #include <iostream>
 
@@ -34,6 +36,10 @@ ConesViewer::ConesViewer() {
   this->P.reset(new Internal());
   vtkRenderWindowInteractor::InteractorManagesTheEventLoop = false;
   std::cout << __func__ << std::endl;
+  auto* p = vtkWebAssemblyOpenGLRenderWindow::SafeDownCast(this->P->Window);
+  if (p) {
+    p->SetCanvasId("#canvas2");
+  }
   this->P->Window->SetWindowName(__func__);
 }
 
@@ -169,10 +175,12 @@ int ConesViewer::Run() {
   std::cout << this->P->Window->GetClassName() << std::endl;
   this->P->Window->Render();
   this->P->Interactor->Start();
+#if VTK_VERSION_NUMBER >= 93030230809ULL
   vtkWebAssemblyOpenGLRenderWindow* renderWindow = vtkWebAssemblyOpenGLRenderWindow::SafeDownCast(this->P->Window.GetPointer());
   if (renderWindow) {
     std::cout << renderWindow->GetCanvasId() << std::endl;
   }
+#endif
   return 0;
 }
 

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 project(GeometryViewer)
 
 configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+
 # -----------------------------------------------------------------------------
 # EMSCRIPTEN only
 # -----------------------------------------------------------------------------
@@ -16,32 +17,32 @@ endif ()
 # -----------------------------------------------------------------------------
 
 if (ENABLE_WEBGPU)
-find_package(VTK
-  COMPONENTS
-    CommonColor
-    FiltersGeometry
-    InteractionStyle
-    InteractionWidgets
-    IOPLY
-    IOGeometry
-    IOXML
-    RenderingOpenGL2
-    RenderingWebGPU
-    RenderingUI
-)
+  find_package(VTK
+    COMPONENTS
+      CommonColor
+      FiltersGeometry
+      InteractionStyle
+      InteractionWidgets
+      IOPLY
+      IOGeometry
+      IOXML
+      RenderingOpenGL2
+      RenderingWebGPU
+      RenderingUI
+  )
 else()
-find_package(VTK
-  COMPONENTS
-    CommonColor
-    FiltersGeometry
-    InteractionStyle
-    InteractionWidgets
-    IOPLY
-    IOGeometry
-    IOXML
-    RenderingOpenGL2
-    RenderingUI
-)
+  find_package(VTK
+    COMPONENTS
+      CommonColor
+      FiltersGeometry
+      InteractionStyle
+      InteractionWidgets
+      IOPLY
+      IOGeometry
+      IOXML
+      RenderingOpenGL2
+      RenderingUI
+  )
 endif()
 if (NOT VTK_FOUND)
   message("Skipping example: ${VTK_NOT_FOUND_MESSAGE}")
@@ -140,6 +141,7 @@ endif()
 # -----------------------------------------------------------------------------
 # Build options
 # -----------------------------------------------------------------------------
+
 set(emscripten_optimizations)
 
 if(OPTIMIZE STREQUAL "NO_OPTIMIZATION")
