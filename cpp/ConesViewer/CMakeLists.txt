@@ -66,6 +66,7 @@ set(emscripten_compile_options)
 list(APPEND emscripten_link_options
   "-lembind"
   "-sMODULARIZE=1"
+  "-sDISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1" # Issue if 0  
   "-sEXPORT_ES6=1"
   "-sEXPORT_NAME=createConesViewerModule"
   "-sALLOW_MEMORY_GROWTH=1"
