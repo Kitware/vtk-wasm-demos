@@ -1,5 +1,5 @@
 {
-  "name": "vtk-wasm-benchmarks",
+  "name": "vtk-wasm-demos",
   "version": "0.0.0",
   "private": true,
   "scripts": {

@@ -9,7 +9,7 @@ function objectToQueryString(obj: any): string {
   return keyValuePairs.join('&');
 }
 
-const benchmarks = ref([
+const demos = ref([
   {
     name: "ConesViewer",
     previewQuery: {
@@ -85,21 +85,21 @@ const benchmarks = ref([
 <template>
   <v-container class="fill-height">
     <v-responsive class="text-center fill-height">
-      <h1 class="text-body-2 font-weight-light mb-n1">VTK WebAssembly Benchmarks</h1>
+      <h1 class="text-body-2 font-weight-light mb-n1">VTK WebAssembly Demos</h1>
 
       <div class="py-14" />
 
       <v-row class="d-flex align-center justify-center">
 
-        <v-col v-for="benchmark in benchmarks" cols="auto" :key="benchmark.id">
+        <v-col v-for="demo in demos" cols="auto" :key="demo.id">
           <v-card hide-details rounded :elevation="9" class="ma-0 pa-0">
-            <iframe scrolling="no" :src="'#/' + benchmark.name + '?' + objectToQueryString(benchmark.previewQuery)">
+            <iframe scrolling="no" :src="'#/' + demo.name + '?' + objectToQueryString(demo.previewQuery)">
             </iframe>
             <v-card-actions>
-              <v-btn :to="{ name: benchmark.name, query: benchmark.mainQuery }" min-width="164" rel="noopener noreferrer"
+              <v-btn :to="{ name: demo.name, query: demo.mainQuery }" min-width="164" rel="noopener noreferrer"
                 target="_blank" variant="text">
                 <v-sheet>
-                  {{ benchmark.name }} (vtk.wasm {{ benchmark.viewApi }})
+                  {{ demo.name }} (vtk.wasm {{ demo.viewApi }})
                 </v-sheet>
                 <v-icon icon="mdi-open-in-new" />
               </v-btn>

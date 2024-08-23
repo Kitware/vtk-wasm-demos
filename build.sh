@@ -18,15 +18,15 @@ readonly sdk_dir
 docker run \
     --rm \
     -u "$(id -u):$(id -g)" \
-    -v"$PWD":/vtkWasmBenchmarks \
+    -v"$PWD":/vtk-wasm-demos \
     $sdk_image:$sdk_version \
-    emcmake cmake -GNinja -S /vtkWasmBenchmarks -B /vtkWasmBenchmarks/out -DCMAKE_BUILD_TYPE=$sdk_config -DVTK_DIR=$sdk_dir
+    emcmake cmake -GNinja -S /vtk-wasm-demos -B /vtk-wasm-demos/out -DCMAKE_BUILD_TYPE=$sdk_config -DVTK_DIR=$sdk_dir
 
 docker run \
     --rm \
-    -v"$PWD":/vtkWasmBenchmarks \
+    -v"$PWD":/vtk-wasm-demos \
     $sdk_image:$sdk_version \
-    cmake --build /vtkWasmBenchmarks/out
+    cmake --build /vtk-wasm-demos/out
 
 npm i
 

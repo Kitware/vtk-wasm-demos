@@ -1,4 +1,4 @@
-name: Deploy Benchmarks
+name: Deploy demos
 
 on:
   push:
