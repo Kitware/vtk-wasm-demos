@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, ref } from "vue";
 import { Properties } from "./Properties";
 import { getConfiguration } from "@/utils/wasmConfigure"
-import { hasWebGPU, getDevice } from "@/utils/wasmWebGPUInit";
+import { hasWebGPU } from "@/utils/wasmWebGPUInit";
 
 import type { ConesViewerModule, ConesViewer } from "./ConesViewerFactory";
 import createConesViewerModule from "./ConesViewer"
@@ -27,7 +27,6 @@ const props = withDefaults(defineProps<Properties>(), {
 var wasmModule: ConesViewerModule | null = null;
 var gui: GUI | null = null;
 var viewer: ConesViewer;
-var animationRequestId: number = -1;
 var fpsScript: HTMLScriptElement | null = null;
 const supportsWebGPU = ref(false)
 
@@ -43,27 +42,26 @@ const options = {
   animate: props.animate,
 }
 
-function updateDatasets() {
-  viewer.createDatasets(options.nx, options.ny, options.nz, options.dx, options.dy, options.dz);
-  viewer.setMapperStatic(options.mapperIsStatic);
-  viewer.resetView();
-  viewer.render();
+async function updateDatasets() {
+  await viewer.createDatasets(options.nx, options.ny, options.nz, options.dx, options.dy, options.dz);
+  await viewer.setMapperStatic(options.mapperIsStatic);
+  await viewer.resetView();
+  await viewer.render();
 }
 
-function spinABit() {
-  viewer.azimuth(1);
-  viewer.render();
-  animationRequestId = requestAnimationFrame(spinABit)
+async function sleep() {
+  return new Promise(requestAnimationFrame);
 }
 
-function updateAnimateState() {
-  if (options.animate) {
-    spinABit();
-  }
-  else {
-    console.log("cancel " + animationRequestId)
-    cancelAnimationFrame(animationRequestId)
-  }
+async function animate() {
+  do {
+    if (options.animate)
+    {
+      await viewer.azimuth(1);
+      await viewer.render();
+    }
+    await sleep();
+  } while (1)
 }
 
 function setupUI() {
@@ -82,64 +80,57 @@ function setupUI() {
   /// show configuration parameters in a GUI.
   gui = new GUI();
   const datasetFolder = gui!.addFolder("Dataset Dimensions")
-  datasetFolder.add(options, "nx", 1, 100).onChange(() => {
-    updateDatasets();
+  datasetFolder.add(options, "nx", 1, 100).onChange(async () => {
+    await updateDatasets();
   });
-  datasetFolder.add(options, "ny", 1, 100).onChange(() => {
-    updateDatasets();
+  datasetFolder.add(options, "ny", 1, 100).onChange(async () => {
+    await updateDatasets();
   });
-  datasetFolder.add(options, "nz", 1, 100).onChange(() => {
-    updateDatasets();
+  datasetFolder.add(options, "nz", 1, 100).onChange(async () => {
+    await updateDatasets();
   });
-  datasetFolder.add(options, "dx", 1.0, 5.0).onChange(() => {
-    updateDatasets();
+  datasetFolder.add(options, "dx", 1.0, 5.0).onChange(async () => {
+    await updateDatasets();
   });
-  datasetFolder.add(options, "dy", 1.0, 5.0).onChange(() => {
-    updateDatasets();
+  datasetFolder.add(options, "dy", 1.0, 5.0).onChange(async () => {
+    await updateDatasets();
   });
-  datasetFolder.add(options, "dz", 1.0, 5.0).onChange(() => {
-    updateDatasets();
+  datasetFolder.add(options, "dz", 1.0, 5.0).onChange(async () => {
+    await updateDatasets();
   });
-  gui!.add(options, "mapperIsStatic").onChange(() => {
-    viewer.setMapperStatic(options.mapperIsStatic);
+  gui!.add(options, "mapperIsStatic").onChange(async () => {
+    await viewer.setMapperStatic(options.mapperIsStatic);
   });
-  gui!.add(options, "mouseWheelMotionFactor", 0.0, 1.0).onChange(() => {
-    viewer.setMouseWheelMotionFactor(options.mouseWheelMotionFactor);
+  gui!.add(options, "mouseWheelMotionFactor", 0.0, 1.0).onChange(async () => {
+    await viewer.setMouseWheelMotionFactor(options.mouseWheelMotionFactor);
   });
-  gui!.add(options, "animate").onChange(() => {
-    updateAnimateState();
-  });
+  gui!.add(options, "animate");
 }
 
 onMounted(async () => {
   console.debug("Mounted with properties ", props);
-  let webgpuDevice: GPUDevice | null = null;
   if (props.viewApi == "webgpu") {
     supportsWebGPU.value = await hasWebGPU();
     if (!supportsWebGPU.value) {
       return;
     }
-    webgpuDevice = await getDevice();
   }
-  let configuration: any = await getConfiguration(props.viewApi, webgpuDevice);
+  let configuration: any = await getConfiguration(props.viewApi);
   wasmModule = await createConesViewerModule(configuration);
   viewer = new wasmModule!.ConesViewer();
-  viewer.initialize();
-  viewer.resetView();
-  viewer.render();
-  updateDatasets()
+  await viewer.initialize();
+  await viewer.resetView();
+  await viewer.render();
+  await updateDatasets()
   // starts processing events on browser main thread.
-  viewer.run();
+  await viewer.run();
   if (props.showControls) {
     setupUI();
   }
-  updateAnimateState();
+  await animate();
 });
 
 onUnmounted(async () => {
-  if (animationRequestId >= 0) {
-    cancelAnimationFrame(animationRequestId);
-  }
   if (fpsScript !== null) {
     document.body.removeChild(fpsScript);
   }

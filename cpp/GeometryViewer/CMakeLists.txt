@@ -55,6 +55,8 @@ set(emscripten_compile_options)
 
 list(APPEND emscripten_link_options
   "-lembind"
+  "-sASYNCIFY=1" # for webgpu async APIs
+  "-sASYNCIFY_STACK_SIZE=81920" #~297 nesting levels
   "-sMODULARIZE=1"
   "-sEXPORT_ES6=1"
   "-sEXPORT_NAME=createGeometryViewerModule"

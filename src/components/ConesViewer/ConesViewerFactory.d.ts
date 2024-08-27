@@ -1,15 +1,15 @@
 /// <reference types="emscripten" />
 
 export interface ConesViewer {
-    initialize(): void;
-    render(): void;
-    resetView(): void;
-    run(): void;
-    createDatasets(nx: number, ny: number, nz: number, dx: number, dy: number, dz: number): void;
-    setMapperStatic(value: boolean): void;
-    azimuth(value: number): void;
-    setMouseWheelMotionFactor(value: number): void;
-    delete(): void;
+    initialize(): Promise<void>;
+    render(): Promise<void>;
+    resetView(): Promise<void>;
+    run(): Promise<void>;
+    createDatasets(nx: number, ny: number, nz: number, dx: number, dy: number, dz: number): Promise<void>;
+    setMapperStatic(value: boolean): Promise<void>;
+    azimuth(value: number): Promise<void>;
+    setMouseWheelMotionFactor(value: number): Promise<void>;
+    delete(): Promise<void>;
 }
 
 export interface ConesViewerModule extends EmscriptenModule {

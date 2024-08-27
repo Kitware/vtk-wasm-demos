@@ -8,7 +8,7 @@ import { Properties } from "./Properties";
 import { getConfiguration } from '../../utils/wasmConfigure'
 import { download } from "../../utils/fileDownload"
 import createGeometryViewerModule from './GeometryViewer'
-import { hasWebGPU, getDevice } from "@/utils/wasmWebGPUInit";
+import { hasWebGPU } from "@/utils/wasmWebGPUInit";
 import GUI, { Controller } from 'lil-gui'
 
 let props = withDefaults(defineProps<Properties>(), {
@@ -74,20 +74,19 @@ const options = {
   orthographic: props.orthographic,
 };
 
-function spinABit() {
-  viewer.azimuth(1);
-  viewer.render();
-  animationRequestId = requestAnimationFrame(spinABit)
+async function sleep() {
+  return new Promise(requestAnimationFrame);
 }
 
-function updateAnimateState() {
-  if (options.animate) {
-    spinABit();
-  }
-  else {
-    console.log("cancel " + animationRequestId)
-    cancelAnimationFrame(animationRequestId)
-  }
+async function animate() {
+  do {
+    if (options.animate)
+    {
+      await viewer.azimuth(1);
+      await viewer.render();
+    }
+    await sleep();
+  } while (1)
 }
 
 var colorByArraysController: Controller;
@@ -108,39 +107,41 @@ async function loadFile(file: File) {
     wasmModule.HEAPU8.set(data, ptr + offset);
     offset += data.byteLength;
   }
-  viewer.loadDataFileFromMemory(file.name, ptr, file.size);
+  await viewer.loadDataFileFromMemory(file.name, ptr, file.size);
   wasmModule._free(ptr);
 
   if (gui !== null) {
-    var colorArrays = ['Solid', ...viewer.getPointDataArrays().split(';'), ...viewer.getCellDataArrays().split(';')];
+    let pointDataArrays = await viewer.getPointDataArrays();
+    let cellDataArrays = await viewer.getCellDataArrays();
+    let colorArrays = ['Solid', ...pointDataArrays.split(';'), ...cellDataArrays.split(';')];
     colorByArraysController = colorByArraysController.options(colorArrays.filter((el) => { return el.length > 0; }));
-    colorByArraysController.onChange(() => {
-      viewer.setColorMapPreset(options.colorMapPreset);
-      viewer.setColorByArray(options.colorByArray);
-      viewer.render();
+    colorByArraysController.onChange(async () => {
+      await viewer.setColorMapPreset(options.colorMapPreset);
+      await viewer.setColorByArray(options.colorByArray);
+      await viewer.render();
     });
-    viewer.setColorMapPreset(options.colorMapPreset);
-    viewer.setColorByArray(options.colorByArray);
-    viewer.render();
+    await viewer.setColorMapPreset(options.colorMapPreset);
+    await viewer.setColorByArray(options.colorByArray);
+    await viewer.render();
   } else {
     // set color map for the default file.
-    viewer.setColorMapPreset(options.colorMapPreset);
-    viewer.setColorByArray(options.colorByArray);
-    viewer.render();
+    await viewer.setColorMapPreset(options.colorMapPreset);
+    await viewer.setColorByArray(options.colorByArray);
+    await viewer.render();
   }
-  viewer.resetView();
-  viewer.render();
+  await viewer.resetView();
+  await viewer.render();
 }
 
 async function onFilesChanged() {
-  viewer.removeAllActors();
+  await viewer.removeAllActors();
   colorByArraysController.setValue('Solid');
   let inputEl = document.getElementById('vtk-input') as HTMLInputElement;
   let files = inputEl.files as FileList;
   await loadFile(files[0]);
 }
 
-function setupUI() {
+async function setupUI() {
   /// setup fps counter
   fpsScript = document.createElement('script');
   fpsScript.onload = () => {
@@ -157,123 +158,120 @@ function setupUI() {
   gui = new GUI();
   gui.add(options, 'simulateFileInput').name('Choose file');
   const meshFolder = gui.addFolder('Mesh');
-  meshFolder?.add(options, 'representation', { Points: 0, Wireframe: 1, Surface: 2, SurfaceWithEdges: 3 }).onChange(() => {
-    viewer.setRepresentation(options.representation);
-    viewer.render();
+  meshFolder?.add(options, 'representation', { Points: 0, Wireframe: 1, Surface: 2, SurfaceWithEdges: 3 }).onChange(async () => {
+    await viewer.setRepresentation(options.representation);
+    await viewer.render();
   });
-  meshFolder?.add(options, 'vertexVisibility').onChange(() => {
-    viewer.setVertexVisibility(options.vertexVisibility);
-    viewer.render();
+  meshFolder?.add(options, 'vertexVisibility').onChange(async () => {
+    await viewer.setVertexVisibility(options.vertexVisibility);
+    await viewer.render();
   });
-  meshFolder?.add(options, 'pointSize', 0.1, 10.0, 0.01).onChange(() => {
-    viewer.setPointSize(options.pointSize);
-    viewer.render();
+  meshFolder?.add(options, 'pointSize', 0.1, 10.0, 0.01).onChange(async () => {
+    await viewer.setPointSize(options.pointSize);
+    await viewer.render();
   });
-  meshFolder?.add(options, 'lineWidth', 0.1, 5.0, 0.01).onChange(() => {
-    viewer.setLineWidth(options.lineWidth);
-    viewer.render();
+  meshFolder?.add(options, 'lineWidth', 0.1, 5.0, 0.01).onChange(async () => {
+    await viewer.setLineWidth(options.lineWidth);
+    await viewer.render();
   });
   const colorFolder = gui.addFolder('Color');
   const scalarMapFolder = colorFolder.addFolder('Scalar Mapping');
   colorByArraysController = scalarMapFolder.add(options, 'colorByArray', options.colorArrays);
-  scalarMapFolder.add(options, 'colorMapPreset', viewer.getColorMapPresets().split(';')).onChange(() => {
-    viewer.setColorMapPreset(options.colorMapPreset);
-    viewer.render();
+  let presets = await viewer.getColorMapPresets();
+  scalarMapFolder.add(options, 'colorMapPreset', presets.split(';')).onChange(async () => {
+    await viewer.setColorMapPreset(options.colorMapPreset);
+    await viewer.render();
   });
-  scalarMapFolder?.add(options, 'interpolateScalarsBeforeMapping').onChange(() => {
-    viewer.setInterpolateScalarsBeforeMapping(options.interpolateScalarsBeforeMapping);
-    viewer.render();
+  scalarMapFolder?.add(options, 'interpolateScalarsBeforeMapping').onChange(async () => {
+    await viewer.setInterpolateScalarsBeforeMapping(options.interpolateScalarsBeforeMapping);
+    await viewer.render();
   });
-  colorFolder.addColor(options, 'solidColor').onChange(() => {
+  colorFolder.addColor(options, 'solidColor').onChange(async () => {
     const rgb = hexToRgb(options.solidColor);
-    viewer.setColor(rgb[0], rgb[1], rgb[2]);
-    viewer.render();
+    await viewer.setColor(rgb[0], rgb[1], rgb[2]);
+    await viewer.render();
   });
-  colorFolder.addColor(options, 'vertexColor').onChange(() => {
+  colorFolder.addColor(options, 'vertexColor').onChange(async () => {
     const rgb = hexToRgb(options.vertexColor);
-    viewer.setVertexColor(rgb[0], rgb[1], rgb[2]);
-    viewer.render();
+    await viewer.setVertexColor(rgb[0], rgb[1], rgb[2]);
+    await viewer.render();
   });
-  colorFolder.addColor(options, 'edgeColor').onChange(() => {
+  colorFolder.addColor(options, 'edgeColor').onChange(async () => {
     const rgb = hexToRgb(options.edgeColor);
-    viewer.setEdgeColor(rgb[0], rgb[1], rgb[2]);
-    viewer.render();
+    await viewer.setEdgeColor(rgb[0], rgb[1], rgb[2]);
+    await viewer.render();
   });
-  colorFolder.add(options, 'opacity', 0.0, 1.0, 0.01).onChange(() => {
-    viewer.setOpacity(options.opacity);
-    viewer.render();
+  colorFolder.add(options, 'opacity', 0.0, 1.0, 0.01).onChange(async () => {
+    await viewer.setOpacity(options.opacity);
+    await viewer.render();
   })
-  colorFolder.add(options, 'edgeOpacity', 0.0, 1.0, 0.01).onChange(() => {
-    viewer.setEdgeOpacity(options.edgeOpacity);
-    viewer.render();
+  colorFolder.add(options, 'edgeOpacity', 0.0, 1.0, 0.01).onChange(async () => {
+    await viewer.setEdgeOpacity(options.edgeOpacity);
+    await viewer.render();
   })
   const viewFolder = gui.addFolder('View');
-  viewFolder.addColor(options, 'backgroundColor1').onChange(() => {
+  viewFolder.addColor(options, 'backgroundColor1').onChange(async () => {
     const rgb = hexToRgb(options.backgroundColor1);
-    viewer.setBackgroundColor1(rgb[0], rgb[1], rgb[2]);
-    viewer.render();
+    await viewer.setBackgroundColor1(rgb[0], rgb[1], rgb[2]);
+    await viewer.render();
   });
-  viewFolder.addColor(options, 'backgroundColor2').onChange(() => {
+  viewFolder.addColor(options, 'backgroundColor2').onChange(async () => {
     const rgb = hexToRgb(options.backgroundColor2);
-    viewer.setBackgroundColor2(rgb[0], rgb[1], rgb[2]);
-    viewer.render();
+    await viewer.setBackgroundColor2(rgb[0], rgb[1], rgb[2]);
+    await viewer.render();
   });
-  viewFolder.add(options, 'mouseWheelMotionFactor', 0.15, 1.0, 0.001).onChange(() => {
-    viewer.setMouseWheelMotionFactor(options.mouseWheelMotionFactor);
+  viewFolder.add(options, 'mouseWheelMotionFactor', 0.15, 1.0, 0.001).onChange(async () => {
+    await viewer.setMouseWheelMotionFactor(options.mouseWheelMotionFactor);
   })
-  viewFolder?.add(options, 'highlightOnHover', { None: 0, Points: 1, Cells: 2 }).onChange(() => {
+  viewFolder?.add(options, 'highlightOnHover', { None: 0, Points: 1, Cells: 2 }).onChange(async () => {
     if (options.highlightOnHover == 0) {
-      viewer.setHighlightOnHover(false, false);
+      await viewer.setHighlightOnHover(false, false);
     }
     else if (options.highlightOnHover == 1) {
-      viewer.setHighlightOnHover(true, /*snapToPoint*/true);
+      await viewer.setHighlightOnHover(true, /*snapToPoint*/true);
     }
     else if (options.highlightOnHover == 2) {
-      viewer.setHighlightOnHover(true, /*snapToPoint*/false);
+      await viewer.setHighlightOnHover(true, /*snapToPoint*/false);
     }
-    viewer.render();
+    await viewer.render();
   });
-  viewFolder.add(options, 'ditherGradient').onChange(() => {
-    viewer.setDitherGradient(options.ditherGradient);
-    viewer.render();
+  viewFolder.add(options, 'ditherGradient').onChange(async () => {
+    await viewer.setDitherGradient(options.ditherGradient);
+    await viewer.render();
   });
-  viewFolder.add(options, 'orthographic').onChange(() => {
-    viewer.setUseOrthographicProjection(options.orthographic);
-    viewer.render();
+  viewFolder.add(options, 'orthographic').onChange(async () => {
+    await viewer.setUseOrthographicProjection(options.orthographic);
+    await viewer.render();
   });
-  viewFolder.add(options, 'mouseWheelMotionFactor', 0.0, 1.0).onChange(() => {
-    viewer.setMouseWheelMotionFactor(options.mouseWheelMotionFactor);
+  viewFolder.add(options, 'mouseWheelMotionFactor', 0.0, 1.0).onChange(async () => {
+    await viewer.setMouseWheelMotionFactor(options.mouseWheelMotionFactor);
   });
-  viewFolder.add(options, 'animate').onChange(() => {
-    updateAnimateState();
-  });
+  viewFolder.add(options, 'animate');
   viewFolder.add(
     {
-      ResetView: () => {
-        viewer.resetView();
-        viewer.render();
+      ResetView: async () => {
+        await viewer.resetView();
+        await viewer.render();
       }
     }, 'ResetView');
 }
 
 onMounted(async () => {
   console.debug("Mounted with properties ", props);
-  let webgpuDevice: GPUDevice | null = null;
   if (props.viewApi == "webgpu") {
     supportsWebGPU.value = await hasWebGPU();
     if (!supportsWebGPU.value) {
       return;
     }
-    webgpuDevice = await getDevice();
   }
-  let configuration: any = await getConfiguration(props.viewApi, webgpuDevice);
+  let configuration: any = getConfiguration(props.viewApi);
   wasmModule = await createGeometryViewerModule(configuration);
   viewer = new wasmModule!.GeometryViewer();
-  viewer.initialize();
-  viewer.resetView();
-  viewer.render();
+  await viewer.initialize();
+  await viewer.resetView();
+  await viewer.render();
   // starts processing events on browser main thread.
-  viewer.start();
+  await viewer.start();
   /// connect drop events
   const dropDestination = document.getElementById('canvas') as HTMLElement;
   dropDestination!.addEventListener('dragover', (e: DragEvent) => {
@@ -288,33 +286,30 @@ onMounted(async () => {
   dropDestination!.addEventListener('dragleave', () => {
     dropDestination!.classList.remove('drag-active');
   });
-  dropDestination!.addEventListener('drop', (e: DragEvent) => {
+  dropDestination!.addEventListener('drop', async (e: DragEvent) => {
     e.preventDefault();
     dropDestination!.classList.remove('drag-active');
     const dataTransfer = e.dataTransfer as DataTransfer;
-    loadFile(dataTransfer.files[0]);
+    await loadFile(dataTransfer.files[0]);
   });
 
   if (props.showControls) {
-    setupUI();
+    await setupUI();
   } else {
     // white background when we're showing ourselves with other apps.
     // ideally this is exposed via a property.
-    viewer.setBackgroundColor1(255, 255, 255);
-    viewer.setBackgroundColor2(255, 255, 255);
+    await viewer.setBackgroundColor1(255, 255, 255);
+    await viewer.setBackgroundColor2(255, 255, 255);
   }
   // load the default file.
   if (props.url.length) {
-    let { blob, filename } = await download(props.url);
-    loadFile(new File([blob], filename));
+    let {blob, filename} = await download(props.url);
+    await loadFile(new File([blob], filename));
+    await animate();
   }
-  updateAnimateState();
 })
 
-onUnmounted(async () => {
-  if (animationRequestId >= 0) {
-    cancelAnimationFrame(animationRequestId);
-  }
+onUnmounted(() => {
   if (fpsScript !== null) {
     document.body.removeChild(fpsScript);
   }
@@ -330,7 +325,7 @@ onUnmounted(async () => {
 </script>
 
 <template>
-  <div v-if="!supportsWebGPU && viewApi == 'webgpu'">
+  <div v-show="!supportsWebGPU && viewApi == 'webgpu'">
     <h3>This application cannot run because your browser does not support WebGPU!</h3>
     <p>Your browser did not provide a GPU adapter. Known to happen on Linux!</p>
   </div>
@@ -338,12 +333,13 @@ onUnmounted(async () => {
 
   <div style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;">
     <div class='canvas_container'>
-      <canvas v-if="(supportsWebGPU && viewApi == 'webgpu') || viewApi == 'webgl'"
+      <canvas v-show="(supportsWebGPU && viewApi == 'webgpu') || viewApi == 'webgl'"
         :class="'GeometryViewer' + viewApi + 'Canvas'" id="canvas"></canvas>
     </div>
     <div class='tooltip'
       style="-moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;-o-user-select:none;"
-      unselectable="on" onselectstart="return false;" onmousedown="return false;" oncontextmenu="event.preventDefault()">
+      unselectable="on" onselectstart="return false;" onmousedown="return false;"
+      oncontextmenu="event.preventDefault()">
     </div>
   </div>
 </template>
