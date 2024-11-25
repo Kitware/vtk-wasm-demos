@@ -21,7 +21,6 @@ const props = withDefaults(defineProps<Properties>(), {
   dz: 2,
   mapperIsStatic: true,
   mouseWheelMotionFactor: 0.15,
-  animate: true,
 });
 
 var wasmModule: ConesViewerModule | null = null;
@@ -39,7 +38,6 @@ const options = {
   dz: props.dz,
   mapperIsStatic: props.mapperIsStatic,
   mouseWheelMotionFactor: props.mouseWheelMotionFactor,
-  animate: props.animate,
 }
 
 async function updateDatasets() {
@@ -47,21 +45,6 @@ async function updateDatasets() {
   await viewer.setMapperStatic(options.mapperIsStatic);
   await viewer.resetView();
   await viewer.render();
-}
-
-async function sleep() {
-  return new Promise(requestAnimationFrame);
-}
-
-async function animate() {
-  do {
-    if (options.animate)
-    {
-      await viewer.azimuth(1);
-      await viewer.render();
-    }
-    await sleep();
-  } while (1)
 }
 
 function setupUI() {
@@ -104,7 +87,6 @@ function setupUI() {
   gui!.add(options, "mouseWheelMotionFactor", 0.0, 1.0).onChange(async () => {
     await viewer.setMouseWheelMotionFactor(options.mouseWheelMotionFactor);
   });
-  gui!.add(options, "animate");
 }
 
 onMounted(async () => {
@@ -127,7 +109,6 @@ onMounted(async () => {
   if (props.showControls) {
     setupUI();
   }
-  await animate();
 });
 
 onUnmounted(async () => {

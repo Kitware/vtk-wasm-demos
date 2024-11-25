@@ -11,7 +11,6 @@ export interface Properties {
     dz?: number,
     mouseWheelMotionFactor?: number,
     mapperIsStatic?: boolean,
-    animate?: boolean,
 }
 
 export function conesViewerPropertiesFromQuery(query: LocationQuery): Properties {
@@ -47,9 +46,6 @@ export function conesViewerPropertiesFromQuery(query: LocationQuery): Properties
     }
     if (query.mapperIsStatic !== undefined && query.mapperIsStatic !== null) {
         result.mapperIsStatic = query.mapperIsStatic.toString() == "true" ? true : false;
-    }
-    if (query.animate !== undefined && query.animate !== null) {
-        result.animate = query.animate.toString() == "true" ? true : false;
     }
     return result;
 }
