@@ -29,3 +29,4 @@ dev-vtk
 out/
 src/components/ConesViewer/ConesViewer.js
 src/components/GeometryViewer/GeometryViewer.js
+out-custom-vtk/
