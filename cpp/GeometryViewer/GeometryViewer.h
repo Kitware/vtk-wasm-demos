@@ -38,7 +38,10 @@ public:
 
   void SetRepresentation(int representation);
   void SetVertexVisibility(bool visible);
+  void SetRenderPointsAsSpheres(bool value);
   void SetPointSize(float value);
+  void SetEdgeVisibility(bool visible);
+  void SetRenderLinesAsTubes(bool value);
   void SetLineWidth(float value);
 
   void SetColorByArray(const std::string &arrayName);
@@ -87,7 +90,10 @@ EMSCRIPTEN_BINDINGS(GeometryViewerJSBindings) {
       .function("azimuth", &GeometryViewer::Azimuth)
       .function("setRepresentation", &GeometryViewer::SetRepresentation)
       .function("setVertexVisibility", &GeometryViewer::SetVertexVisibility)
+      .function("setRenderPointsAsSpheres", &GeometryViewer::SetRenderPointsAsSpheres)
       .function("setPointSize", &GeometryViewer::SetPointSize)
+      .function("setEdgeVisibility", &GeometryViewer::SetEdgeVisibility)
+      .function("setRenderLinesAsTubes", &GeometryViewer::SetRenderLinesAsTubes)
       .function("setLineWidth", &GeometryViewer::SetLineWidth)
       .function("setColorByArray", &GeometryViewer::SetColorByArray)
       .function("setInterpolateScalarsBeforeMapping",

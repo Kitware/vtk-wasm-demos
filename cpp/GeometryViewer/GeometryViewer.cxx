@@ -495,21 +495,7 @@ void GeometryViewer::SetHighlightOnHover(bool value,
 //------------------------------------------------------------------------------
 void GeometryViewer::SetRepresentation(int rep) {
   std::cout << __func__ << '(' << rep << ')' << std::endl;
-  if (rep <= VTK_SURFACE) {
-    this->P->Actor->GetProperty()->SetRepresentation(rep);
-    if (rep != VTK_SURFACE)
-    {
-      this->P->Actor->GetProperty()->SetAmbient(1.0);
-    }
-    else
-    {
-      this->P->Actor->GetProperty()->SetAmbient(0.0);
-    }
-    this->P->Actor->GetProperty()->SetEdgeVisibility(false);
-  } else if (rep == 3) {
-    this->P->Actor->GetProperty()->SetRepresentationToSurface();
-    this->P->Actor->GetProperty()->SetEdgeVisibility(true);
-  }
+  this->P->Actor->GetProperty()->SetRepresentation(rep);
 }
 
 //------------------------------------------------------------------------------
@@ -519,9 +505,29 @@ void GeometryViewer::SetVertexVisibility(bool visible) {
 }
 
 //------------------------------------------------------------------------------
+void GeometryViewer::SetRenderPointsAsSpheres(bool value)
+{
+  std::cout << __func__ << '(' << value << ')' << std::endl;
+  this->P->Actor->GetProperty()->SetRenderPointsAsSpheres(value);
+}
+
+//------------------------------------------------------------------------------
 void GeometryViewer::SetPointSize(float value) {
   std::cout << __func__ << '(' << value << ')' << std::endl;
   this->P->Actor->GetProperty()->SetPointSize(value);
+}
+
+//------------------------------------------------------------------------------
+void GeometryViewer::SetEdgeVisibility(bool visible) {
+  std::cout << __func__ << '(' << visible << ')' << std::endl;
+  this->P->Actor->GetProperty()->SetEdgeVisibility(visible);
+}
+
+//------------------------------------------------------------------------------
+void GeometryViewer::SetRenderLinesAsTubes(bool value)
+{
+  std::cout << __func__ << '(' << value << ')' << std::endl;
+  this->P->Actor->GetProperty()->SetRenderLinesAsTubes(value);
 }
 
 //------------------------------------------------------------------------------

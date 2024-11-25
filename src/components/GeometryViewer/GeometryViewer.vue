@@ -11,13 +11,16 @@ import createGeometryViewerModule from './GeometryViewer'
 import { hasWebGPU } from "@/utils/wasmWebGPUInit";
 import GUI, { Controller } from 'lil-gui'
 
-let props = withDefaults(defineProps<Properties>(), {
+const props = withDefaults(defineProps<Properties>(), {
   viewApi: "webgl",
   url: "",
   showControls: true,
   representation: 2,
   vertexVisibility: false,
+  renderPointsAsSpheres: false,
   pointSize: 1.0,
+  edgeVisibility: false,
+  renderLinesAsTubes: false,
   lineWidth: 1.0,
 
   colorByArray: 'Solid',
@@ -31,63 +34,20 @@ let props = withDefaults(defineProps<Properties>(), {
   edgeOpacity: 1.0,
 
   mouseWheelMotionFactor: 0.15,
-  animate: true,
-  backgroundColor1: 0xa8e6a9,
+  backgroundColor1: 0x000000,
   backgroundColor2: 0x1d2671,
   highlightOnHover: 0,
   ditherGradient: true,
   orthographic: false,
 });
 
+const options = { ...props, 'simulateFileInput': () => document.getElementById('vtk-input')?.click(), 'colorArrays': ['Solid'] };
+
 var wasmModule: GeometryViewerModule | null = null;
 var viewer: GeometryViewer;
 var gui: GUI | null = null;
-var animationRequestId: number = -1;
 var fpsScript: HTMLScriptElement | null = null;
 const supportsWebGPU = ref(false)
-
-// Default options
-const options = {
-  simulateFileInput: function () { document.getElementById('vtk-input')?.click(); },
-  colorArrays: ['Solid'],
-  representation: props.representation,
-  vertexVisibility: props.vertexVisibility,
-  pointSize: props.pointSize,
-  lineWidth: props.lineWidth,
-
-  colorByArray: props.colorByArray,
-  colorMapPreset: props.colorMapPreset,
-  interpolateScalarsBeforeMapping: props.interpolateScalarsBeforeMapping,
-
-  solidColor: props.solidColor,
-  vertexColor: props.vertexColor,
-  edgeColor: props.edgeColor,
-  opacity: props.opacity,
-  edgeOpacity: props.edgeOpacity,
-
-  mouseWheelMotionFactor: props.mouseWheelMotionFactor,
-  animate: props.animate,
-  backgroundColor1: props.backgroundColor1,
-  backgroundColor2: props.backgroundColor2,
-  highlightOnHover: props.highlightOnHover,
-  ditherGradient: props.ditherGradient,
-  orthographic: props.orthographic,
-};
-
-async function sleep() {
-  return new Promise(requestAnimationFrame);
-}
-
-async function animate() {
-  do {
-    if (options.animate)
-    {
-      await viewer.azimuth(1);
-      await viewer.render();
-    }
-    await sleep();
-  } while (1)
-}
 
 var colorByArraysController: Controller;
 
@@ -158,7 +118,7 @@ async function setupUI() {
   gui = new GUI();
   gui.add(options, 'simulateFileInput').name('Choose file');
   const meshFolder = gui.addFolder('Mesh');
-  meshFolder?.add(options, 'representation', { Points: 0, Wireframe: 1, Surface: 2, SurfaceWithEdges: 3 }).onChange(async () => {
+  meshFolder?.add(options, 'representation', { Points: 0, Wireframe: 1, Surface: 2 }).onChange(async () => {
     await viewer.setRepresentation(options.representation);
     await viewer.render();
   });
@@ -166,8 +126,20 @@ async function setupUI() {
     await viewer.setVertexVisibility(options.vertexVisibility);
     await viewer.render();
   });
+  meshFolder?.add(options, 'renderPointsAsSpheres').onChange(async () => {
+    await viewer.setRenderPointsAsSpheres(options.renderPointsAsSpheres);
+    await viewer.render();
+  });
   meshFolder?.add(options, 'pointSize', 0.1, 10.0, 0.01).onChange(async () => {
     await viewer.setPointSize(options.pointSize);
+    await viewer.render();
+  });
+  meshFolder?.add(options, 'edgeVisibility').onChange(async () => {
+    await viewer.setEdgeVisibility(options.edgeVisibility);
+    await viewer.render();
+  });
+  meshFolder?.add(options, 'renderLinesAsTubes').onChange(async () => {
+    await viewer.setRenderLinesAsTubes(options.renderLinesAsTubes);
     await viewer.render();
   });
   meshFolder?.add(options, 'lineWidth', 0.1, 5.0, 0.01).onChange(async () => {
@@ -246,7 +218,6 @@ async function setupUI() {
   viewFolder.add(options, 'mouseWheelMotionFactor', 0.0, 1.0).onChange(async () => {
     await viewer.setMouseWheelMotionFactor(options.mouseWheelMotionFactor);
   });
-  viewFolder.add(options, 'animate');
   viewFolder.add(
     {
       ResetView: async () => {
@@ -303,9 +274,8 @@ onMounted(async () => {
   }
   // load the default file.
   if (props.url.length) {
-    let {blob, filename} = await download(props.url);
+    let { blob, filename } = await download(props.url);
     await loadFile(new File([blob], filename));
-    await animate();
   }
 })
 

@@ -16,6 +16,7 @@ export interface GeometryViewer {
     setUseOrthographicProjection(_0: boolean): Promise<void>;
     setDitherGradient(_0: boolean): Promise<void>;
     setVertexVisibility(_0: boolean): Promise<void>;
+    setEdgeVisibility(_0: boolean): Promise<void>;
     setInterpolateScalarsBeforeMapping(_0: boolean): Promise<void>;
     setRepresentation(_0: number): Promise<void>;
     setColor(_0: number, _1: number, _2: number): Promise<void>;
@@ -27,12 +28,10 @@ export interface GeometryViewer {
     setOpacity(_0: number): Promise<void>;
     setEdgeOpacity(_0: number): Promise<void>;
     loadDataFileFromMemory(_0: ArrayBuffer | Uint8Array | Uint8ClampedArray | Int8Array | string, _1: number, _2: number): Promise<void>;
-    setVertexShaderSource(_0: ArrayBuffer | Uint8Array | Uint8ClampedArray | Int8Array | string): Promise<ArrayBuffer | Uint8Array | Uint8ClampedArray | Int8Array | string>;
-    setFragmentShaderSource(_0: ArrayBuffer | Uint8Array | Uint8ClampedArray | Int8Array | string): Promise<ArrayBuffer | Uint8Array | Uint8ClampedArray | Int8Array | string>;
-    getVertexShaderSource(): Promise<ArrayBuffer | Uint8Array | Uint8ClampedArray | Int8Array | string>;
-    getFragmentShaderSource(): Promise<ArrayBuffer | Uint8Array | Uint8ClampedArray | Int8Array | string>;
-    setColorByArray(_0: ArrayBuffer | Uint8Array | Uint8ClampedArray | Int8Array | string): Promise<void>;
-    setColorMapPreset(_0: ArrayBuffer | Uint8Array | Uint8ClampedArray | Int8Array | string): Promise<void>;
+    setColorByArray(_0:  string): Promise<void>;
+    setColorMapPreset(_0:  string): Promise<void>;
+    setRenderPointsAsSpheres(_0: boolean): Promise<void>;
+    setRenderLinesAsTubes(_0: boolean): Promise<void>;
     getPointDataArrays(): Promise<string>;
     getCellDataArrays(): Promise<string>;
     getColorMapPresets(): Promise<string>;

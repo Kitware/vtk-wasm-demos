@@ -6,8 +6,6 @@ export interface Properties {
     colorByArray?: string,
     colorMapPreset?: string,
 
-    colorArrays?: Array<string>,
-
     representation?: number,
     pointSize?: number,
     lineWidth?: number,
@@ -25,17 +23,22 @@ export interface Properties {
     interpolateScalarsBeforeMapping?: boolean,
     showControls?: boolean,
     vertexVisibility?: boolean,
-    animate?: boolean,
+    edgeVisibility?: boolean,
     ditherGradient?: boolean,
     orthographic?: boolean,
+    renderPointsAsSpheres?: boolean,
+    renderLinesAsTubes?: boolean,
 }
 
-export function geometryViewerPropertiesFromQuery(query: LocationQuery): Properties {
+export function geometryViewerPropertiesFromQuery(query: LocationQuery | null | undefined): Properties {
     const result: Properties = {
         viewApi: "webgl",
     };
+    if (query === undefined || query === null) {
+        return result;
+    }
     // strings
-    if (query.viewApi !== undefined && query.viewApi !== null) {
+    if (query?.viewApi !== undefined && query.viewApi !== null) {
         result.viewApi = query.viewApi.toString();
     }
     if (query.url !== undefined && query.url !== null) {
@@ -100,14 +103,20 @@ export function geometryViewerPropertiesFromQuery(query: LocationQuery): Propert
     if (query.vertexVisibility !== undefined && query.vertexVisibility !== null) {
         result.vertexVisibility = query.vertexVisibility.toString() == "true" ? true : false;
     }
-    if (query.animate !== undefined && query.animate !== null) {
-        result.animate = query.animate.toString() == "true" ? true : false;
+    if (query.edgeVisibility !== undefined && query.edgeVisibility !== null) {
+        result.edgeVisibility = query.edgeVisibility.toString() == "true" ? true : false;
     }
     if (query.ditherGradient !== undefined && query.ditherGradient !== null) {
         result.ditherGradient = query.ditherGradient.toString() == "true" ? true : false;
     }
     if (query.orthographic !== undefined && query.orthographic !== null) {
         result.orthographic = query.orthographic.toString() == "true" ? true : false;
+    }
+    if (query.renderPointsAsSpheres !== undefined && query.renderPointsAsSpheres !== null) {
+        result.renderPointsAsSpheres = query.renderPointsAsSpheres.toString() == "true" ? true : false;
+    }
+    if (query.renderLinesAsTubes !== undefined && query.renderLinesAsTubes !== null) {
+        result.renderLinesAsTubes = query.renderLinesAsTubes.toString() == "true" ? true : false;
     }
     return result;
 }
