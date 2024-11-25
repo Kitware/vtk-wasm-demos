@@ -75,73 +75,55 @@ if (CMAKE_SIZEOF_VOID_P EQUAL 8)
   "-sMAXIMUM_MEMORY=16GB")
 endif ()
 
-set(emscripten_debug_options)
-
-if(DEBUGINFO STREQUAL "NONE")
-  list(APPEND emscripten_debug_options
-    "-g0"
-  )
-elseif(DEBUGINFO STREQUAL "READABLE_JS")
-  list(APPEND emscripten_debug_options
-    "-g1"
-  )
-  list(APPEND emscripten_link_options
-    "-sDEMANGLE_SUPPORT=1"
-  )
-elseif(DEBUGINFO STREQUAL "PROFILE")
-  list(APPEND emscripten_debug_options
-    "-g2"
-  )
-  list(APPEND emscripten_link_options
-    "-sDEMANGLE_SUPPORT=1"
-  )
-elseif(DEBUGINFO STREQUAL "DEBUG_NATIVE")
-  list(APPEND emscripten_debug_options
-    "-g3"
-  )
-  list(APPEND emscripten_link_options
-    "-sASSERTIONS=1"
-    "-sDEMANGLE_SUPPORT=1"
-  )
-endif()
-
 # -----------------------------------------------------------------------------
-# Build options
+# Optimizations
 # -----------------------------------------------------------------------------
 set(emscripten_optimizations)
+set(emscripten_debug_options)
 
-if(OPTIMIZE STREQUAL "NO_OPTIMIZATION")
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+  set(geometry_viewer_optimize "BEST")
+  set(geometry_viewer_debug_info "NONE")
+elseif (CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+  set(geometry_viewer_optimize "SMALLEST_WITH_CLOSURE")
+  set(geometry_viewer_debug_info "NONE")
+elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+  set(geometry_viewer_optimize "MORE")
+  set(geometry_viewer_debug_info "PROFILE")
+elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(geometry_viewer_optimize "NO_OPTIMIZATION")
+  set(geometry_viewer_debug_info "DEBUG_NATIVE")
+endif ()
+set(geometry_viewer_optimize_NO_OPTIMIZATION "-O0")
+set(geometry_viewer_optimize_LITTLE "-O1")
+set(geometry_viewer_optimize_MORE "-O2")
+set(geometry_viewer_optimize_BEST "-O3")
+set(geometry_viewer_optimize_SMALLEST "-Os")
+set(geometry_viewer_optimize_SMALLEST_WITH_CLOSURE "-Oz")
+set(geometry_viewer_optimize_SMALLEST_WITH_CLOSURE_link "--closure=1")
+
+if (DEFINED "geometry_viewer_optimize_${geometry_viewer_optimize}")
   list(APPEND emscripten_optimizations
-    "-O0"
-  )
-elseif(OPTIMIZE STREQUAL "LITTLE")
-  list(APPEND emscripten_optimizations
-    "-O1"
-  )
-elseif(OPTIMIZE STREQUAL "MORE")
-  list(APPEND emscripten_optimizations
-    "-O2"
-  )
-elseif(OPTIMIZE STREQUAL "BEST")
-  list(APPEND emscripten_optimizations
-    "-O3"
-  )
-elseif(OPTIMIZE STREQUAL "SMALL")
-  list(APPEND emscripten_optimizations
-    "-Os"
-  )
-elseif(OPTIMIZE STREQUAL "SMALLEST")
-  list(APPEND emscripten_optimizations
-    "-Oz"
-  )
-elseif(OPTIMIZE STREQUAL "SMALLEST_WITH_CLOSURE")
-  list(APPEND emscripten_optimizations
-    "-Oz"
-  )
+    ${geometry_viewer_optimize_${geometry_viewer_optimize}})
   list(APPEND emscripten_link_options
-    "--closure=1"
-  )
-endif()
+    ${geometry_viewer_optimize_${geometry_viewer_optimize}_link})
+else ()
+  message (FATAL_ERROR "Unrecognized value for geometry_viewer_optimize=${geometry_viewer_optimize}")
+endif ()
+
+set(geometry_viewer_debug_info_NONE "-g0")
+set(geometry_viewer_debug_info_READABLE_JS "-g1")
+set(geometry_viewer_debug_info_PROFILE "-g2")
+set(geometry_viewer_debug_info_DEBUG_NATIVE "-g3")
+set(geometry_viewer_debug_info_DEBUG_NATIVE_link "-sASSERTIONS=1")
+if (DEFINED "geometry_viewer_debug_info_${geometry_viewer_debug_info}")
+  list(APPEND emscripten_debug_options
+    ${geometry_viewer_debug_info_${geometry_viewer_debug_info}})
+  list(APPEND emscripten_link_options
+    ${geometry_viewer_debug_info_${geometry_viewer_debug_info}_link})
+else ()
+  message (FATAL_ERROR "Unrecognized value for geometry_viewer_debug_info=${geometry_viewer_debug_info}")
+endif ()
 
 target_compile_options(GeometryViewer
   PUBLIC
