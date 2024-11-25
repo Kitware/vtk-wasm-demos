@@ -244,7 +244,7 @@ onMounted(async () => {
   // starts processing events on browser main thread.
   await viewer.start();
   /// connect drop events
-  const dropDestination = document.getElementById('canvas') as HTMLElement;
+  const dropDestination = document.getElementById('vtk-3d-canvas') as HTMLElement;
   dropDestination!.addEventListener('dragover', (e: DragEvent) => {
     // prevent default to allow drop
     e.preventDefault();
@@ -304,7 +304,7 @@ onUnmounted(() => {
   <div style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;">
     <div class='canvas_container'>
       <canvas v-show="(supportsWebGPU && viewApi == 'webgpu') || viewApi == 'webgl'"
-        :class="'GeometryViewer' + viewApi + 'Canvas'" id="canvas"></canvas>
+        :class="'GeometryViewer' + viewApi + 'Canvas'" id="vtk-3d-canvas"></canvas>
     </div>
     <div class='tooltip'
       style="-moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;-o-user-select:none;"

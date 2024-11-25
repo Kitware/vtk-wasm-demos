@@ -48,6 +48,9 @@
 #include <vtkTubeFilter.h>
 #include <vtkType.h>
 #include <vtkUnsignedCharArray.h>
+#include <vtkWebAssemblyOpenGLRenderWindow.h>
+#include <vtkWebAssemblyRenderWindowInteractor.h>
+#include <vtkWebAssemblyWebGPURenderWindow.h>
 #include <vtkWindowToImageFilter.h>
 #include <vtkXMLPolyDataReader.h>
 #include <vtkXMLUnstructuredGridReader.h>
@@ -299,13 +302,22 @@ void GeometryViewer::Initialize() {
   this->P->Renderer->GradientBackgroundOn();
   this->P->Renderer->SetGradientMode(
       vtkRenderer::GradientModes::VTK_GRADIENT_RADIAL_VIEWPORT_FARTHEST_CORNER);
-  this->P->Renderer->SetBackground(0.658824, 0.901961, 0.662745);
-  this->P->Renderer->SetBackground2(0.113725, 0.14902, 0.443137);
   // initialize picker data
   this->P->HighlighterData.Renderer = this->P->Renderer;
   // create the default renderer
   this->P->Window->AddRenderer(this->P->Renderer);
   this->P->Window->SetInteractor(this->P->Interactor);
+  auto iren =
+      vtkWebAssemblyRenderWindowInteractor::SafeDownCast(this->P->Interactor);
+  iren->SetCanvasSelector("#vtk-3d-canvas");
+  if (auto wasmWebGPURenderWindow =
+          vtkWebAssemblyWebGPURenderWindow::SafeDownCast(this->P->Window)) {
+    wasmWebGPURenderWindow->SetCanvasSelector("#vtk-3d-canvas");
+  }
+  if (auto wasmOpenGLRenderWindow =
+          vtkWebAssemblyOpenGLRenderWindow::SafeDownCast(this->P->Window)) {
+    wasmOpenGLRenderWindow->SetCanvasSelector("#vtk-3d-canvas");
+  }
   // turn on camera manipulator
   // this->P->CameraManipulator->SetParentRenderer(this->P->Renderer);
   // this->P->CameraManipulator->SetAnimate(false);
@@ -326,9 +338,7 @@ void GeometryViewer::Initialize() {
 }
 
 //------------------------------------------------------------------------------
-void GeometryViewer::Render() {
-  this->P->Window->Render();
-}
+void GeometryViewer::Render() { this->P->Window->Render(); }
 
 //------------------------------------------------------------------------------
 void GeometryViewer::ResetView() {
@@ -340,8 +350,7 @@ void GeometryViewer::ResetView() {
 }
 
 //------------------------------------------------------------------------------
-void GeometryViewer::SetSize(int width, int height)
-{
+void GeometryViewer::SetSize(int width, int height) {
   std::cout << __func__ << width << ',' << height << std::endl;
   this->P->Interactor->UpdateSize(width, height);
 }
