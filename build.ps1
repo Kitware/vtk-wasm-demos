@@ -1,6 +1,6 @@
 $erroractionpreference = "stop"
 
-$sdk_version="wasm32-v9.4.0-404-gd900c93767-20241123"
+$sdk_version="wasm32-v9.4.0-829-g3b526cff4e-20241221"
 $sdk_image="kitware/vtk-wasm-sdk"
 $sdk_config="Release"
 

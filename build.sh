@@ -4,7 +4,7 @@ set -e
 set -x
 
 # Default values for the arguments
-sdk_image="kitware/vtk-wasm-sdk:wasm32-v9.4.0-404-gd900c93767-20241123"
+sdk_image="kitware/vtk-wasm-sdk:wasm32-v9.4.0-829-g3b526cff4e-20241221"
 
 sdk_config="Release"
 
@@ -14,7 +14,7 @@ sdk_dir=""
 usage() {
     echo "Usage: $0 [-c sdk_config] [-i sdk_image] [-d sdk_dir]"
     echo "  -c sdk_config  Set the SDK configuration (default: Release)"
-    echo "  -i sdk_image   Set the SDK image (default: kitware/vtk-wasm-sdk:wasm32-v9.4.0-404-gd900c93767-20241123)"
+    echo "  -i sdk_image   Set the SDK image (default: kitware/vtk-wasm-sdk:wasm32-v9.4.0-829-g3b526cff4e-20241221)"
     echo "  -d sdk_dir     Set the SDK directory (default: empty)"
     exit 1
 }
