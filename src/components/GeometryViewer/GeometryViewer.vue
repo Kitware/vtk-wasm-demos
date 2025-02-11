@@ -8,6 +8,7 @@ import { Properties } from "./Properties";
 import { getConfiguration } from '../../utils/wasmConfigure'
 import { download } from "../../utils/fileDownload"
 import createGeometryViewerModule from './GeometryViewer'
+import { openDirectory } from "../../utils/openDirectory"
 import { hasWebGPU } from "@/utils/wasmWebGPUInit";
 import GUI, { Controller } from 'lil-gui'
 
@@ -41,8 +42,13 @@ const props = withDefaults(defineProps<Properties>(), {
   orthographic: false,
 });
 
-const options = { ...props, 'simulateFileInput': () => document.getElementById('vtk-input')?.click(), 'colorArrays': ['Solid'] };
+const options = {
+  ...props, 'simulateFileInput': () => document.getElementById('vtk-input')?.click(),
+  'resetSession': onResetSession,
+  'simulateDirectoryInput': onDirectoryChanged, 'colorArrays': ['Solid']
+};
 
+var pendingCompositeFileName = "";
 var wasmModule: GeometryViewerModule | null = null;
 var viewer: GeometryViewer;
 var gui: GUI | null = null;
@@ -51,12 +57,9 @@ const supportsWebGPU = ref(false)
 
 var colorByArraysController: Controller;
 
-async function loadFile(file: File) {
+async function writeFileToWASMMemory(file: File): Promise<number> {
   if (wasmModule === null || wasmModule === undefined) {
-    return;
-  }
-  if (viewer === null || viewer === undefined) {
-    return;
+    return 0;
   }
   let chunks = chunkify(file, /*chunkSize=*/((num: bigint) => (num < -9007199254740992n || num > 9007199254740992n) ? NaN : Number(num))(maxSize))
   let offset = 0;
@@ -67,9 +70,10 @@ async function loadFile(file: File) {
     wasmModule.HEAPU8.set(data, ptr + offset);
     offset += data.byteLength;
   }
-  await viewer.loadDataFileFromMemory(file.name, ptr, file.size);
-  wasmModule._free(ptr);
+  return ptr;
+}
 
+async function postFileLoad() {
   if (gui !== null) {
     let pointDataArrays = await viewer.getPointDataArrays();
     let cellDataArrays = await viewer.getCellDataArrays();
@@ -93,12 +97,76 @@ async function loadFile(file: File) {
   await viewer.render();
 }
 
-async function onFilesChanged() {
+async function loadFileFromBlob(file: File) {
+  if (wasmModule === null || wasmModule === undefined) {
+    return;
+  }
+  if (viewer === null || viewer === undefined) {
+    return;
+  }
+  let ptr = await writeFileToWASMMemory(file);
+  await viewer.loadDataFileFromMemory(file.name, ptr, file.size);
+  wasmModule._free(ptr);
+  await postFileLoad();
+}
+
+async function loadFileByName(filename: string) {
+  if (wasmModule === null || wasmModule === undefined) {
+    return;
+  }
+  if (viewer === null || viewer === undefined) {
+    return;
+  }
+  await viewer.loadDataFile(filename);
+  await postFileLoad();
+}
+
+async function onResetSession() {
   await viewer.removeAllActors();
+}
+
+async function onFilesChanged() {
+  if (wasmModule === null || wasmModule === undefined) {
+    return;
+  }
+  if (viewer === null || viewer === undefined) {
+    return;
+  }
   colorByArraysController.setValue('Solid');
   let inputEl = document.getElementById('vtk-input') as HTMLInputElement;
   let files = inputEl.files as FileList;
-  await loadFile(files[0]);
+  if (files.length == 0) {
+    return;
+  }
+  if (files[0].name.endsWith('.vtm') || files[0].name.endsWith('.vtpc')) {
+    // preload files[0] into wasm memory
+    pendingCompositeFileName = files[0].name;
+    let ptr = await writeFileToWASMMemory(files[0]);
+    await viewer.writeDataFileToVirtualFS(files[0].name, ptr, files[0].size);
+    wasmModule._free(ptr);
+    alert("You have selected a composite dataset file. Please click on Choose directory and pick the accompanying directories.");
+  }
+  else {
+    await loadFileFromBlob(files[0]);
+  }
+}
+
+async function onDirectoryChanged() {
+  if (wasmModule === null || wasmModule === undefined) {
+    return;
+  }
+  if (viewer === null || viewer === undefined) {
+    return;
+  }
+  if (pendingCompositeFileName !== null) {
+    let directoryFiles = await openDirectory();
+    for (let file of directoryFiles) {
+      let ptr = await writeFileToWASMMemory(file);
+      await viewer.writeDataFileToVirtualFS(file.directoryHandle.name + "/" + file.name, ptr, file.size);
+      wasmModule._free(ptr);
+    }
+    await loadFileByName(pendingCompositeFileName);
+  }
 }
 
 async function setupUI() {
@@ -116,7 +184,9 @@ async function setupUI() {
   document.head.appendChild(fpsScript);
   /// show configuration options in a GUI.
   gui = new GUI();
+  gui.add(options, 'resetSession').name('Reset session');
   gui.add(options, 'simulateFileInput').name('Choose file');
+  gui.add(options, 'simulateDirectoryInput').name('Choose directory');
   const meshFolder = gui.addFolder('Mesh');
   meshFolder?.add(options, 'representation', { Points: 0, Wireframe: 1, Surface: 2 }).onChange(async () => {
     await viewer.setRepresentation(options.representation);
@@ -261,7 +331,7 @@ onMounted(async () => {
     e.preventDefault();
     dropDestination!.classList.remove('drag-active');
     const dataTransfer = e.dataTransfer as DataTransfer;
-    await loadFile(dataTransfer.files[0]);
+    await loadFileFromBlob(dataTransfer.files[0]);
   });
 
   if (props.showControls) {
@@ -275,7 +345,7 @@ onMounted(async () => {
   // load the default file.
   if (props.url.length) {
     let { blob, filename } = await download(props.url);
-    await loadFile(new File([blob], filename));
+    await loadFileFromBlob(new File([blob], filename));
   }
 })
 
@@ -299,7 +369,8 @@ onUnmounted(() => {
     <h3>This application cannot run because your browser does not support WebGPU!</h3>
     <p>Your browser did not provide a GPU adapter. Known to happen on Linux!</p>
   </div>
-  <input type='file' id='vtk-input' v-on:change="onFilesChanged" accept='.obj, .ply, .vtk, .vtp, .vtu' required>
+  <input type='file' id='vtk-input' v-on:change="onFilesChanged" accept='.obj, .ply, .vtk, .vtp, .vtu, .vtm, .vtpc'
+    required>
 
   <div style="position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;">
     <div class='canvas_container'>
