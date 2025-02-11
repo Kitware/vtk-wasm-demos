@@ -28,6 +28,7 @@ export interface GeometryViewer {
     setOpacity(_0: number): Promise<void>;
     setEdgeOpacity(_0: number): Promise<void>;
     loadDataFileFromMemory(_0: ArrayBuffer | Uint8Array | Uint8ClampedArray | Int8Array | string, _1: number, _2: number): Promise<void>;
+    loadDataFile(_0: ArrayBuffer | Uint8Array | Uint8ClampedArray | Int8Array | string): Promise<void>;
     writeDataFileToVirtualFS(_0: ArrayBuffer | Uint8Array | Uint8ClampedArray | Int8Array | string, _1: number, _2: number): Promise<void>;
     setColorByArray(_0: string): Promise<void>;
     setColorMapPreset(_0: string): Promise<void>;

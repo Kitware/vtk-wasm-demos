@@ -11,6 +11,7 @@ public:
 
   void LoadDataFileFromMemory(const std::string &filename,
                               std::uintptr_t buffer, std::size_t nbytes);
+  void LoadDataFile(const std::string &filename);
   void WriteDataFileToVirtualFS(const std::string &filename,
                               std::uintptr_t buffer, std::size_t nbytes);
 
@@ -73,6 +74,8 @@ EMSCRIPTEN_BINDINGS(GeometryViewerJSBindings) {
       .constructor<>()
       .function("loadDataFileFromMemory",
                 &GeometryViewer::LoadDataFileFromMemory)
+      .function("loadDataFile", &GeometryViewer::LoadDataFile)
+      .function("writeDataFileToVirtualFS", &GeometryViewer::WriteDataFileToVirtualFS)
       .function("initialize", &GeometryViewer::Initialize)
       .function("render", &GeometryViewer::Render)
       .function("resetView", &GeometryViewer::ResetView)

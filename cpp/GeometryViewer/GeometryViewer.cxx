@@ -14,6 +14,10 @@
 #include <vtkCollectionRange.h>
 #include <vtkColorSeries.h>
 #include <vtkColorTransferFunction.h>
+#include <vtkCompositeDataSet.h>
+#include <vtkCompositePolyDataMapper.h>
+#include <vtkDataObjectTreeIterator.h>
+#include <vtkDataObjectTreeRange.h>
 #include <vtkGLTFReader.h>
 #include <vtkGeometryFilter.h>
 #include <vtkHardwarePicker.h>
@@ -52,6 +56,8 @@
 #include <vtkWebAssemblyRenderWindowInteractor.h>
 #include <vtkWebAssemblyWebGPURenderWindow.h>
 #include <vtkWindowToImageFilter.h>
+#include <vtkXMLMultiBlockDataReader.h>
+#include <vtkXMLPartitionedDataSetCollectionReader.h>
 #include <vtkXMLPolyDataReader.h>
 #include <vtkXMLUnstructuredGridReader.h>
 #include <vtksys/SystemTools.hxx>
@@ -65,7 +71,6 @@ namespace {
 struct HighlighterBridge {
   std::string ActivePointColorArray;
   std::string ActiveCellColorArray;
-  vtkSmartPointer<vtkPolyData> InputMesh;
   vtkSmartPointer<vtkRenderer> Renderer;
 };
 
@@ -99,11 +104,12 @@ void HighlightPointUnderMouse(vtkObject *caller,
   int *pos = interactor->GetEventPosition();
   vtkNew<vtkPointPicker> picker;
   const int pickedSomething = picker->Pick(pos[0], pos[1], 0, data->Renderer);
+  auto *pickedDataSet = picker->GetDataSet();
   if (!pickedSomething) {
     ::hideTooltip();
   } else if (picker->GetPointId() >= 0) {
     std::array<double, 3> xyz;
-    data->InputMesh->GetPoint(picker->GetPointId(), xyz.data());
+    pickedDataSet->GetPoint(picker->GetPointId(), xyz.data());
     std::ostringstream oss;
     // point id.
     oss << "Point Id: " << picker->GetPointId() << '|';
@@ -114,7 +120,7 @@ void HighlightPointUnderMouse(vtkObject *caller,
     // point data arrays.
     if (!data->ActivePointColorArray.empty()) {
       oss << data->ActivePointColorArray << ": ";
-      auto arr = data->InputMesh->GetPointData()->GetArray(
+      auto arr = pickedDataSet->GetPointData()->GetArray(
           data->ActivePointColorArray.c_str());
       oss << '(';
       for (int i = 0; i < arr->GetNumberOfComponents(); ++i) {
@@ -141,25 +147,37 @@ void HighlightCellUnderMouse(vtkObject *caller,
   if (!pickedSomething) {
     ::hideTooltip();
   } else if (picker->GetCellId() >= 0) {
+    // get the picked dataset, maybe null
+    auto *pickedDataSet = picker->GetDataSet();
+    // get the picked composite dataset and the flat index of the picked block.
+    auto *pickedCompositeDataSet = picker->GetCompositeDataSet();
+    auto pickedBlockIndex = picker->GetFlatBlockIndex();
+    // set the picked dataset to the block at the index which was picked.
+    if (pickedBlockIndex >= 0 && pickedCompositeDataSet != nullptr) {
+      pickedDataSet = vtkDataSet::SafeDownCast(
+          pickedCompositeDataSet->GetDataSet(pickedBlockIndex));
+    }
     std::ostringstream oss;
     // cell id.
     oss << "Cell Id: " << picker->GetCellId() << '|';
     // cell connectivity.
-    const vtkIdType *pts = nullptr;
-    vtkIdType npts = 0;
-    data->InputMesh->GetCellPoints(picker->GetCellId(), npts, pts);
-    oss << "Connectivity (";
-    for (vtkIdType i = 0; i < npts; ++i) {
-      oss << pts[i];
-      if (i < npts - 1) {
-        oss << ',';
+    if (auto *polydata = vtkPolyData::SafeDownCast(pickedDataSet)) {
+      const vtkIdType *pts = nullptr;
+      vtkIdType npts = 0;
+      polydata->GetCellPoints(picker->GetCellId(), npts, pts);
+      oss << "Connectivity (";
+      for (vtkIdType i = 0; i < npts; ++i) {
+        oss << pts[i];
+        if (i < npts - 1) {
+          oss << ',';
+        }
       }
+      oss << ")|";
     }
-    oss << ")|";
     // cell data arrays.
     if (!data->ActiveCellColorArray.empty()) {
       oss << data->ActiveCellColorArray << ": ";
-      auto arr = data->InputMesh->GetCellData()->GetArray(
+      auto arr = pickedDataSet->GetCellData()->GetArray(
           data->ActiveCellColorArray.c_str());
       oss << '(';
       for (int i = 0; i < arr->GetNumberOfComponents(); ++i) {
@@ -185,7 +203,7 @@ public:
   std::unordered_set<std::string> CellDataArrays;
 
   void UpdateLUT();
-  void FetchAvailableDataArrays(vtkDataSet *pointset);
+  void FetchAvailableDataArrays(vtkDataObject *dataObject);
 
   HighlighterBridge HighlighterData;
   vtkNew<vtkActor> Actor;
@@ -273,6 +291,13 @@ void GeometryViewer::LoadDataFileFromMemory(const std::string &filename,
     plyreader->SetStream(stream);
     plyreader->Update();
     mesh->ShallowCopy(plyreader->GetOutput());
+  } else if (systools::StringEndsWith(filename, ".zip")) {
+    auto plyreader = vtk::TakeSmartPointer(vtkPLYReader::New());
+    plyreader->SetReadFromInputStream(true);
+    stream->SetBuffer(wrappedBuffer);
+    plyreader->SetStream(stream);
+    plyreader->Update();
+    mesh->ShallowCopy(plyreader->GetOutput());
   }
   mapper->SetInputData(mesh);
   this->P->Actor->SetMapper(mapper);
@@ -286,6 +311,78 @@ void GeometryViewer::LoadDataFileFromMemory(const std::string &filename,
   mapper->StaticOn();
   // Fetches point and cell data arrays from reader's output.
   this->P->FetchAvailableDataArrays(mesh);
+}
+
+//------------------------------------------------------------------------------
+void GeometryViewer::LoadDataFile(const std::string &filename) {
+
+  std::cout << __func__ << "(" << filename << ")" << std::endl;
+
+  auto mapper = vtk::TakeSmartPointer(vtkPolyDataMapper::New());
+  vtkSmartPointer<vtkDataObject> mesh;
+
+  using systools = vtksys::SystemTools;
+  if (systools::StringEndsWith(filename, ".vtp")) {
+    auto xmlreader = vtk::TakeSmartPointer(vtkXMLPolyDataReader::New());
+    xmlreader->SetFileName(filename.c_str());
+    xmlreader->Update();
+    mesh = xmlreader->GetOutput();
+  } else if (systools::StringEndsWith(filename, ".vtu")) {
+    auto xmlreader = vtk::TakeSmartPointer(vtkXMLUnstructuredGridReader::New());
+    xmlreader->SetFileName(filename.c_str());
+    auto surface = vtk::TakeSmartPointer(vtkGeometryFilter::New());
+    surface->SetInputConnection(xmlreader->GetOutputPort());
+    surface->Update();
+    mesh = surface->GetOutput();
+  } else if (systools::StringEndsWith(filename, ".vtk")) {
+    auto polydataReader = vtk::TakeSmartPointer(vtkPolyDataReader::New());
+    polydataReader->SetFileName(filename.c_str());
+    polydataReader->Update();
+    mesh = polydataReader->GetOutput();
+  } else if (systools::StringEndsWith(filename, ".glb") ||
+             systools::StringEndsWith(filename, ".gltf")) {
+    // TODO: Hangs.
+    // auto gltfreader = vtk::TakeSmartPointer(vtkGLTFReader::New());
+    // mapper = vtk::TakeSmartPointer(vtkPolyDataMapper::New());
+    // gltfreader->SetFileName(filename.c_str());
+    // reader = gltfreader;
+  } else if (systools::StringEndsWith(filename, ".obj")) {
+    auto objreader = vtk::TakeSmartPointer(vtkOBJReader::New());
+    objreader->SetFileName(filename.c_str());
+    objreader->Update();
+    mesh = objreader->GetOutput();
+  } else if (systools::StringEndsWith(filename, ".ply")) {
+    auto plyreader = vtk::TakeSmartPointer(vtkPLYReader::New());
+    plyreader->SetFileName(filename.c_str());
+    plyreader->Update();
+    mesh = plyreader->GetOutput();
+  } else if (systools::StringEndsWith(filename, ".vtpc")) {
+    mapper = vtk::TakeSmartPointer(vtkCompositePolyDataMapper::New());
+    auto vtpcreader =
+        vtk::TakeSmartPointer(vtkXMLPartitionedDataSetCollectionReader::New());
+    vtpcreader->SetFileName(filename.c_str());
+    vtpcreader->Update();
+    mesh = vtpcreader->GetOutput();
+  } else if (systools::StringEndsWith(filename, ".vtm")) {
+    mapper = vtk::TakeSmartPointer(vtkCompositePolyDataMapper::New());
+    auto vtmreader = vtk::TakeSmartPointer(vtkXMLMultiBlockDataReader::New());
+    vtmreader->SetFileName(filename.c_str());
+    vtmreader->Update();
+    mesh = vtmreader->GetOutput();
+  }
+  mapper->SetInputDataObject(mesh);
+  this->P->Actor->SetMapper(mapper);
+  this->P->Renderer->AddActor(this->P->Actor);
+  this->SetColorByArray("Solid");
+  this->P->UpdateLUT();
+  // render once so that the pipeline is updated
+  this->P->Window->Render();
+  // make the mapper static so that subsequent renders do not walk up the VTK
+  // pipeline anymore.
+  mapper->StaticOn();
+  // Fetches point and cell data arrays from reader's output.
+  this->P->FetchAvailableDataArrays(mesh);
+}
 
 //------------------------------------------------------------------------------
 void GeometryViewer::WriteDataFileToVirtualFS(const std::string &filename,
@@ -529,8 +626,7 @@ void GeometryViewer::SetVertexVisibility(bool visible) {
 }
 
 //------------------------------------------------------------------------------
-void GeometryViewer::SetRenderPointsAsSpheres(bool value)
-{
+void GeometryViewer::SetRenderPointsAsSpheres(bool value) {
   std::cout << __func__ << '(' << value << ')' << std::endl;
   this->P->Actor->GetProperty()->SetRenderPointsAsSpheres(value);
 }
@@ -548,8 +644,7 @@ void GeometryViewer::SetEdgeVisibility(bool visible) {
 }
 
 //------------------------------------------------------------------------------
-void GeometryViewer::SetRenderLinesAsTubes(bool value)
-{
+void GeometryViewer::SetRenderLinesAsTubes(bool value) {
   std::cout << __func__ << '(' << value << ')' << std::endl;
   this->P->Actor->GetProperty()->SetRenderLinesAsTubes(value);
 }
@@ -578,13 +673,13 @@ void GeometryViewer::SetColorByArray(const std::string &arrayName) {
   if (this->P->PointDataArrays.count(arrayName)) {
     this->P->HighlighterData.ActivePointColorArray = arrayName;
     mapper->SetScalarModeToUsePointFieldData();
-    scalarArray = mapper->GetInputAsDataSet()->GetPointData()->GetArray(
-        arrayName.c_str());
+    scalarArray =
+        mapper->GetDataSetInput()->GetPointData()->GetArray(arrayName.c_str());
   } else if (this->P->CellDataArrays.count(arrayName)) {
     this->P->HighlighterData.ActiveCellColorArray = arrayName;
     mapper->SetScalarModeToUseCellFieldData();
     scalarArray =
-        mapper->GetInputAsDataSet()->GetCellData()->GetArray(arrayName.c_str());
+        mapper->GetDataSetInput()->GetCellData()->GetArray(arrayName.c_str());
   } else {
     return;
   }
@@ -707,17 +802,27 @@ void GeometryViewer::Internal::UpdateLUT() {
 }
 
 //------------------------------------------------------------------------------
-void GeometryViewer::Internal::FetchAvailableDataArrays(vtkDataSet *dataSet) {
-  this->PointDataArrays.clear();
-  if (auto pointData = dataSet->GetPointData()) {
-    for (int i = 0; i < pointData->GetNumberOfArrays(); ++i) {
-      this->PointDataArrays.insert(pointData->GetArrayName(i));
+void GeometryViewer::Internal::FetchAvailableDataArrays(
+    vtkDataObject *dataObject) {
+  if (auto *dataObjectTree = vtkDataObjectTree::SafeDownCast(dataObject)) {
+    using Opts = vtk::DataObjectTreeOptions;
+    for (vtkDataObject *child : vtk::Range(dataObjectTree, Opts::None)) {
+      if (child) {
+        this->FetchAvailableDataArrays(child);
+      }
     }
-  }
-  this->CellDataArrays.clear();
-  if (auto cellData = dataSet->GetCellData()) {
-    for (int i = 0; i < cellData->GetNumberOfArrays(); ++i) {
-      this->CellDataArrays.insert(cellData->GetArrayName(i));
+  } else if (auto *dataSet = vtkDataSet::SafeDownCast(dataObject)) {
+    this->PointDataArrays.clear();
+    if (auto pointData = dataSet->GetPointData()) {
+      for (int i = 0; i < pointData->GetNumberOfArrays(); ++i) {
+        this->PointDataArrays.insert(pointData->GetArrayName(i));
+      }
+    }
+    this->CellDataArrays.clear();
+    if (auto cellData = dataSet->GetCellData()) {
+      for (int i = 0; i < cellData->GetNumberOfArrays(); ++i) {
+        this->CellDataArrays.insert(cellData->GetArrayName(i));
+      }
     }
   }
 }
