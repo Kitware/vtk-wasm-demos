@@ -286,8 +286,23 @@ void GeometryViewer::LoadDataFileFromMemory(const std::string &filename,
   mapper->StaticOn();
   // Fetches point and cell data arrays from reader's output.
   this->P->FetchAvailableDataArrays(mesh);
-  // update picker data;
-  this->P->HighlighterData.InputMesh = mesh;
+
+//------------------------------------------------------------------------------
+void GeometryViewer::WriteDataFileToVirtualFS(const std::string &filename,
+                                              std::uintptr_t buffer,
+                                              std::size_t nbytes) {
+  std::cout << __func__ << std::endl;
+  using systools = vtksys::SystemTools;
+  const auto parentDir = systools::GetParentDirectory(filename);
+  if (!parentDir.empty()) {
+    if (!systools::MakeDirectory(parentDir).IsSuccess()) {
+      std::cerr << "ERROR: Failed to create parent directory for file = "
+                << filename << '\n';
+    }
+  }
+  std::ofstream ofs(filename, std::ios::binary);
+  ofs.write(reinterpret_cast<char *>(buffer), nbytes);
+  std::cout << "Wrote " << nbytes << " bytes into " << filename << '\n';
 }
 
 //------------------------------------------------------------------------------

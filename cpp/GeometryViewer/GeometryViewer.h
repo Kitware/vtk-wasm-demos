@@ -11,6 +11,8 @@ public:
 
   void LoadDataFileFromMemory(const std::string &filename,
                               std::uintptr_t buffer, std::size_t nbytes);
+  void WriteDataFileToVirtualFS(const std::string &filename,
+                              std::uintptr_t buffer, std::size_t nbytes);
 
   void Initialize();
   void Render();
