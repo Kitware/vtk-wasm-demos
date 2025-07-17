@@ -3,18 +3,29 @@
 ## Requirements
 
 1. docker
-2. npm
+2. python
 
-The build process is composed of two steps. You will need to compile C++ components to generate `.wasm` files and then run some `npm` commands to bundle those into a static site. For convenience, the shell scripts provided for Windows and Unix do everything needed to build a website from a fresh clone.
+## Usage
+
+```sh
+python ./build.py [-h]
+usage: build.py [-h] [-c SDK_CONFIG] [-i SDK_IMAGE] [-a SDK_IMAGE_ARCH] [-t COMMIT_HASH] [-d SDK_DIR]
+
+Build with VTK SDK for WebAssembly.
+
+options:
+  -h, --help            show this help message and exit
+  -c SDK_CONFIG, --sdk_config SDK_CONFIG
+  -i SDK_IMAGE, --sdk_image SDK_IMAGE
+  -a SDK_IMAGE_ARCH, --sdk_image_arch SDK_IMAGE_ARCH
+  -t COMMIT_HASH, --commit_hash COMMIT_HASH
+  -d SDK_DIR, --sdk_dir SDK_DIR
+```
 
 ## Build
 
-**Windows**
-```sh
-.\build.ps1
-```
+When run without any arguments, the defaults are used for the vtk-wasm-sdk docker image tag and VTK repository commit hash where the examples are downloaded from.
 
-**Unix**
 ```sh
-./build.sh
+python ./build.py
 ```

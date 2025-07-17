@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VTK WebAssembly Demos</title>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=open_in_new" />
+  <style>
+    * {
+      font-family: 'Exo 2';
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .title {
+      text-align: center;
+      color: #333;
+      margin-bottom: 40px;
+      font-size: 2em;
+      font-weight: normal;
+    }
+
+    .demos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      justify-items: center;
+    }
+
+    .demo-card {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .demo-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .demo-iframe {
+      width: 280px;
+      height: 200px;
+      border: none;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+
+    .demo-button {
+      width: 100%;
+      padding: 10px;
+      background-color: #ffffff;
+      color: rgb(0, 0, 0);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .demo-button:hover {
+      background-color: #f5f5f5b7;
+    }
+
+    .demo-button:active {
+      transform: translateY(1px);
+    }
+
+    .material-symbols-outlined:hover {
+      cursor: pointer;
+      color: #0051ff;
+    }
+
+    /* latin */
+    @font-face {
+      font-family: 'Exo 2';
+      font-style: normal;
+      font-weight: 400;
+      src: url(https://fonts.gstatic.com/s/exo2/v21/7cH1v4okm5zmbvwkAx_sfcEuiD8jvvKsOdC_.woff2) format('woff2');
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="title">VTK WebAssembly Demos</h1>
+    <div class="demos-grid">
+    </div>
+  </div>
+  <script type="module">
+    import demos from './demos.js';
+
+    for (const demo of Object.values(demos)) {
+      const demosGrid = document.querySelector('.demos-grid');
+      const demoElement = document.createElement('div');
+      demoElement.className = 'demo-card';
+      if (demo.previewURL.length > 0) {
+        var previewHTML = `
+            <iframe class="demo-iframe"
+                src="${demo.previewURL}"
+                frameborder="0" scrolling="no"></iframe>`
+
+      } else {
+        var previewHTML = `
+            <div class="demo-iframe"
+                style="width: 280px; height: 200px; background-color: #e0e0e0; border-radius: 4px;">
+                <p style="padding: 10px; color: #666;">No preview available. Open in new tab</p>
+            </div>`;
+      }
+      demoElement.innerHTML = `
+            ${previewHTML}
+            <div style="display: flex; align-items: center;">
+              <button class="demo-button"
+                  onclick="window.open('${demo.onClickURL}', '_blank')">
+                  ${demo.name}
+              </button>
+              <span class="material-symbols-outlined">open_in_new</span>
+            </div>`;
+      demosGrid.appendChild(demoElement);
+    }
+
+  </script>
+</body>
+
+</html>

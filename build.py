@@ -1,69 +1,100 @@
 import subprocess
 import os
-import sys
 import platform
 import argparse
+import aiohttp
+import asyncio
+import tarfile
+import shutil
+import contextlib
 
-# Default values for the arguments
-DEFAULT_TAG = "wasm32-v9.4.1-1059-g71e59d05f0-20250125"
+DEFAULT_TAG = "9.5.20250714"
+DEFAULT_COMMIT_HASH = "e872847809b631ee0335e410de81eb4a098d4444"
+DEFAULT_SDK_IMAGE_ARCH = "wasm64"
 
-# Function to run commands
+
+def get_example_url(commit_hash):
+    return f"https://gitlab.kitware.com/vtk/vtk/-/archive/{commit_hash}/vtk-{commit_hash}.tar.gz?path=Examples/Emscripten/Cxx"
+
+
+async def download_file(url, filename):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            with open(filename, "wb") as f:
+                f.write(await response.read())
 
 
 def run_command(command, shell=False):
-    print(f"Running command: {' '.join(command)}")
+    print(f"Running: {' '.join(command)}")
     subprocess.run(command, shell=shell, check=True)
 
 
-if __name__ == "__main__":
+@contextlib.contextmanager
+def pushd(directory):
+    prev = os.getcwd()
+    os.chdir(directory)
+    try:
+        yield prev
+    finally:
+        os.chdir(prev)
 
-    sdk_image = f"kitware/vtk-wasm-sdk:{DEFAULT_TAG}"
-    sdk_config = "Release"
-    sdk_dir = ""
 
-    # Set up argument parsing
+async def main():
     parser = argparse.ArgumentParser(
         description="Build with VTK SDK for WebAssembly.")
-    parser.add_argument("-c", "--sdk_config", default=sdk_config,
-                        help="Set the SDK configuration (default: Release)")
-    parser.add_argument("-i", "--sdk_image", default=sdk_image,
-                        help=f"Set the SDK image (default: kitware/vtk-wasm-sdk:{DEFAULT_TAG})")
-    parser.add_argument("-d", "--sdk_dir", default=sdk_dir,
-                        help="Set the SDK directory (default: empty)")
-
-    # Parse the arguments
+    parser.add_argument("-c", "--sdk_config", default="Release")
+    parser.add_argument("-i", "--sdk_image",
+                        default=f"kitware/vtk-wasm-sdk:{DEFAULT_TAG}")
+    parser.add_argument("-a", "--sdk_image_arch",
+                        default=DEFAULT_SDK_IMAGE_ARCH)
+    parser.add_argument("-t", "--commit_hash", default=DEFAULT_COMMIT_HASH)
+    parser.add_argument("-d", "--sdk_dir", default="")
     args = parser.parse_args()
 
-    sdk_image = args.sdk_image
-    sdk_config = args.sdk_config
-    sdk_dir = args.sdk_dir
+    sdk_dir = args.sdk_dir or f"/VTK-install/{args.sdk_config}/{args.sdk_image_arch}/lib/cmake/vtk"
+    examples_dest_path = "vtk-examples.tar.gz"
+    await download_file(get_example_url(args.commit_hash), examples_dest_path)
+    with tarfile.open(examples_dest_path) as tgz:
+        tgz.extractall(".")
 
-    # Check if sdk_dir is set (provided as argument)
-    if not sdk_dir:
-        sdk_dir = "/VTK-install/{}/lib/cmake/vtk".format(sdk_config)
+    projects = []
+    for root, _, files in os.walk("."):
+        if not os.path.split(root)[0].endswith("Cxx"):
+            continue
+        if "CMakeLists.txt" in files:
+            with open(os.path.join(root, "CMakeLists.txt")) as f:
+                content = f.read()
+                if "-pthread" in content or "CTest" in content:
+                    continue
+            projects.append(os.path.abspath(root))
 
-    # Determine platform for setting shell behavior
-    is_windows = platform.system().lower() == "windows"
-    shell = True if is_windows else False
+    shell = platform.system().lower() == "windows"
+    for project_dir in projects:
+        print(f"Building: {project_dir}")
+        with pushd(project_dir) as orig:
+            if not args.sdk_dir:
+                run_command([
+                    "docker", "run", "--rm", "-v", f"{project_dir}:/work",
+                    args.sdk_image, "emcmake", "cmake", "-GNinja", "-S", "/work", "-B", "/work/build",
+                    f"{'-DCMAKE_C_FLAGS=-sMEMORY64=1' if '64' in args.sdk_image_arch else ''}",
+                    f"-DCMAKE_BUILD_TYPE={args.sdk_config}", f"-DVTK_DIR={sdk_dir}"], shell=shell)
+                run_command([
+                    "docker", "run", "--rm", "-v", f"{project_dir}:/work", args.sdk_image,
+                    "cmake", "--build", "/work/build"], shell=shell)
+            else:
+                run_command(["emcmake", "cmake", "-GNinja", "-S", ".", "-B", "./out-custom-vtk",
+                            f"-DCMAKE_BUILD_TYPE={args.sdk_config}", f"-DVTK_DIR={sdk_dir}"], shell=shell)
+                run_command(
+                    ["cmake", "--build", "./out-custom-vtk"], shell=shell)
 
-    # Check if sdk_dir is provided or not
-    if not args.sdk_dir:
-        # If sdk_dir is empty, use the default path and run the Docker commands
-        run_command([
-            "docker", "run", "--rm", "-v", f"{os.getcwd()}:/vtk-wasm-demos",
-            sdk_image, "emcmake", "cmake", "-GNinja", "-S", "/vtk-wasm-demos", "-B", "/vtk-wasm-demos/out",
-            f"-DCMAKE_BUILD_TYPE={sdk_config}", f"-DVTK_DIR={sdk_dir}"], shell=shell)
+            src_dir = os.path.join(project_dir, "build")
+            dst_dir = os.path.join(orig, "dist", os.path.basename(project_dir))
+            for file in os.listdir(src_dir):
+                if file.endswith((".css", ".html", ".js", ".wasm")):
+                    os.makedirs(dst_dir, exist_ok=True)
+                    shutil.copy2(os.path.join(src_dir, file),
+                                 os.path.join(dst_dir, file))
+                    print(f"Copied {file} to {dst_dir}")
 
-        run_command([
-            "docker", "run", "--rm", "-v", f"{os.getcwd()}:/vtk-wasm-demos", sdk_image,
-            "cmake", "--build", "/vtk-wasm-demos/out"], shell=shell)
-    else:
-        # If sdk_dir is provided, use the custom directory and run the commands
-        print(f"Using VTK SDK at {sdk_dir}")
-        run_command(["emcmake", "cmake", "-GNinja", "-S", ".", "-B", "./out-custom-vtk",
-                    f"-DCMAKE_BUILD_TYPE={sdk_config}", f"-DVTK_DIR={sdk_dir}"], shell=shell)
-        run_command(["cmake", "--build", "./out-custom-vtk"], shell=shell)
-
-    # Run npm commands
-    run_command(["npm", "i"], shell=shell)
-    run_command(["npm", "run", "build"], shell=shell)
+if __name__ == "__main__":
+    asyncio.run(main())
