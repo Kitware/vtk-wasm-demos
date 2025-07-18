@@ -29,7 +29,8 @@ jobs:
     - name: Build
       run: |
         pip install -r requirements.txt
-        python3 ./build.py
+        python3 ./build.py --sdk-image-arch wasm32
+        python3 ./build.py --sdk-image-arch wasm64
     - name: Setup Pages
       uses: actions/configure-pages@v5
     - name: Upload artifact

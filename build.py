@@ -10,7 +10,7 @@ import contextlib
 
 DEFAULT_TAG = "9.5.20250714"
 DEFAULT_COMMIT_HASH = "e872847809b631ee0335e410de81eb4a098d4444"
-DEFAULT_SDK_IMAGE_ARCH = "wasm64"
+DEFAULT_SDK_IMAGE_ARCH = "wasm32"
 
 
 def get_example_url(commit_hash):
@@ -42,13 +42,11 @@ def pushd(directory):
 async def main():
     parser = argparse.ArgumentParser(
         description="Build with VTK SDK for WebAssembly.")
-    parser.add_argument("-c", "--sdk_config", default="Release")
-    parser.add_argument("-i", "--sdk_image",
-                        default=f"kitware/vtk-wasm-sdk:{DEFAULT_TAG}")
-    parser.add_argument("-a", "--sdk_image_arch",
-                        default=DEFAULT_SDK_IMAGE_ARCH)
-    parser.add_argument("-t", "--commit_hash", default=DEFAULT_COMMIT_HASH)
-    parser.add_argument("-d", "--sdk_dir", default="")
+    parser.add_argument("-a", "--sdk-image-arch", default=DEFAULT_SDK_IMAGE_ARCH)
+    parser.add_argument("-c", "--sdk-config", default="Release")
+    parser.add_argument("-d", "--sdk-dir", default="")
+    parser.add_argument("-i", "--sdk-image", default=f"kitware/vtk-wasm-sdk:{DEFAULT_TAG}")
+    parser.add_argument("-t", "--commit-hash", default=DEFAULT_COMMIT_HASH)
     args = parser.parse_args()
 
     sdk_dir = args.sdk_dir or f"/VTK-install/{args.sdk_config}/{args.sdk_image_arch}/lib/cmake/vtk"
@@ -73,22 +71,24 @@ async def main():
         print(f"Building: {project_dir}")
         with pushd(project_dir) as orig:
             if not args.sdk_dir:
+                project_build_dir = f"/work/build/{args.sdk_image_arch}"
                 run_command([
                     "docker", "run", "--rm", "-v", f"{project_dir}:/work",
-                    args.sdk_image, "emcmake", "cmake", "-GNinja", "-S", "/work", "-B", "/work/build",
+                    args.sdk_image, "emcmake", "cmake", "-GNinja", "-S", "/work", "-B", project_build_dir,
                     f"{'-DCMAKE_C_FLAGS=-sMEMORY64=1' if '64' in args.sdk_image_arch else ''}",
                     f"-DCMAKE_BUILD_TYPE={args.sdk_config}", f"-DVTK_DIR={sdk_dir}"], shell=shell)
                 run_command([
                     "docker", "run", "--rm", "-v", f"{project_dir}:/work", args.sdk_image,
-                    "cmake", "--build", "/work/build"], shell=shell)
+                    "cmake", "--build", project_build_dir,], shell=shell)
             else:
-                run_command(["emcmake", "cmake", "-GNinja", "-S", ".", "-B", "./out-custom-vtk",
+                project_build_dir = f"./build/{args.sdk_image_arch}"
+                run_command(["emcmake", "cmake", "-GNinja", "-S", ".", "-B", project_build_dir,
                             f"-DCMAKE_BUILD_TYPE={args.sdk_config}", f"-DVTK_DIR={sdk_dir}"], shell=shell)
                 run_command(
-                    ["cmake", "--build", "./out-custom-vtk"], shell=shell)
+                    ["cmake", "--build", project_build_dir], shell=shell)
 
-            src_dir = os.path.join(project_dir, "build")
-            dst_dir = os.path.join(orig, "dist", os.path.basename(project_dir))
+            src_dir = os.path.join(project_dir, "build", args.sdk_image_arch)
+            dst_dir = os.path.join(orig, "dist", args.sdk_image_arch, os.path.basename(project_dir))
             for file in os.listdir(src_dir):
                 if file.endswith((".css", ".html", ".js", ".wasm")):
                     os.makedirs(dst_dir, exist_ok=True)

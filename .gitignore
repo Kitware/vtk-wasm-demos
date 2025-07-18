@@ -1,5 +1,6 @@
 dist/*
-!dist/demos.js
-!dist/index.html
+!dist/*.js
+!dist/*.html
+!dist/*.ico
 vtk-*/
 vtk-*.tar.gz
