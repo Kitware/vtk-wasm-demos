@@ -11,13 +11,13 @@ export default function getDemos() {
     ConeMultiBackendWebGL: {
       name: "Cone Multi Backend (WebGL)",
       description: "A demo rendering of a cone geometry using multiple backends (WebGL and WebGPU).",
-      previewURL: "", //`${ORIGIN}${PATHNAME}${ARCH}/ConeMultiBackend/webgl.html`,
+      previewURL: `${ORIGIN}${PATHNAME}${ARCH}/ConeMultiBackend/webgl.html`,
       onClickURL: `${ORIGIN}${PATHNAME}${ARCH}/ConeMultiBackend/webgl.html`,
     },
     ConeMultiBackendWebGPU: {
       name: "Cone Multi Backend (WebGPU)",
       description: "A demo rendering of a cone geometry using multiple backends (WebGL and WebGPU).",
-      previewURL: "",  //`${ORIGIN}${PATHNAME}${ARCH}/ConeMultiBackend/webgpu.html`,
+      previewURL: `${ORIGIN}${PATHNAME}${ARCH}/ConeMultiBackend/webgpu.html`,
       onClickURL: `${ORIGIN}${PATHNAME}${ARCH}/ConeMultiBackend/webgpu.html`,
     },
     GeometryViewerWebGL: {
