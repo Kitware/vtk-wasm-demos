@@ -2,6 +2,12 @@ import { ORIGIN, PATHNAME } from "./constants.js";
 export default function getDemos() {
   const ARCH = document.querySelector("input[name='architecture']:checked").value;
   return {
+    AsyncClipper: {
+      name: "AsyncClipper",
+      description: "Simple demo rendering of a cone geometry.",
+      previewURL: `${ORIGIN}${PATHNAME}${ARCH}/AsyncClipper/index.html`,
+      onClickURL: `${ORIGIN}${PATHNAME}${ARCH}/AsyncClipper/index.html`,
+    },
     Cone: {
       name: "Cone",
       description: "Simple demo rendering of a cone geometry.",
@@ -43,6 +49,12 @@ export default function getDemos() {
       description: "Simple demo rendering of a cone geometry.",
       previewURL: "",
       onClickURL: `${ORIGIN}${PATHNAME}${ARCH}/MultipleCanvases/index.html`,
+    },
+    WrappedAsyncClipper: {
+      name: "WrappedAsyncClipper",
+      description: "Simple demo rendering of a cone geometry.",
+      previewURL: `${ORIGIN}${PATHNAME}${ARCH}/WrappedAsyncClipper/index.html`,
+      onClickURL: `${ORIGIN}${PATHNAME}${ARCH}/WrappedAsyncClipper/index.html`,
     },
     WrappedMace: {
       name: "WrappedMace",
