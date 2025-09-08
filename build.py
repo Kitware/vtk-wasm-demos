@@ -26,8 +26,10 @@ async def download_file(url, filename):
 
 def run_command(command, shell=False):
     print(f"Running: {' '.join(command)}")
-    subprocess.run(command, shell=shell, check=True)
-
+    try:
+        subprocess.run(command, shell=shell, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Command '{' '.join(command)}' failed with exit code {e.returncode} and output:\n{e.output} and error:\n{e.stderr}")
 
 @contextlib.contextmanager
 def pushd(directory):
