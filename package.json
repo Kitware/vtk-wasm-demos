@@ -1,0 +1,17 @@
+{
+  "name": "vtk-wasm-demos",
+  "version": "0.0.1",
+  "description": "A collection of VTK C++ demos compiled to WebAssembly",
+  "author": "Jaswant Panchumarti",
+  "scripts": {
+    "dry-clean": "git clean -fdx -n",
+    "clean": "git clean -fdx",
+    "firebase-deploy": "firebase deploy --only hosting",
+    "firebase-init": "firebase init hosting",
+    "firebase-init-gh": "firebase init hosting:github",
+    "firebase-login": "firebase login"
+  },
+  "devDependencies": {
+    "firebase-tools": "^14.15.2"
+  }
+}
