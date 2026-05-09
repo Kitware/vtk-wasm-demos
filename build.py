@@ -8,7 +8,7 @@ import tarfile
 import shutil
 import contextlib
 
-DEFAULT_TAG = "9.5.20250909-8f25bb8"
+DEFAULT_TAG = "9.6.20260508-a4a55d112e"
 DEFAULT_COMMIT_HASH = "d99e8cb530baadfb2266cc811f14d1a34d9756e6"
 DEFAULT_SDK_IMAGE_ARCH = "wasm32"
 
