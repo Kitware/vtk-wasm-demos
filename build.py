@@ -9,7 +9,7 @@ import shutil
 import contextlib
 
 DEFAULT_TAG = "9.6.20260508-a4a55d112e"
-DEFAULT_COMMIT_HASH = "d99e8cb530baadfb2266cc811f14d1a34d9756e6"
+DEFAULT_COMMIT_HASH = "a4a55d112efe61ffea971a95f7a9d09d87620b0b"
 DEFAULT_SDK_IMAGE_ARCH = "wasm32"
 
 
